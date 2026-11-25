@@ -36,6 +36,14 @@ jobs:
           set -o pipefail
           gradle assembleDebug testDebugUnitTest :core:capabilities:test lintDebug --stacktrace --console=plain 2>&1 | tee build.log
 
+      - name: Render component screenshots
+        id: shots
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle :ui:design:recordRoborazziDebug --console=plain 2>&1 | tee shots.log
+
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4
@@ -64,11 +72,20 @@ jobs:
             echo "sha=${GITHUB_SHA}"
             echo "----- last 400 lines of build log -----"
             tail -n 400 build.log 2>/dev/null || true
+            echo "----- screenshots step: ${{ steps.shots.outcome }} -----"
+            tail -n 60 shots.log 2>/dev/null || true
           } > "$name"
+          mkdir -p /tmp/shots
+          cp ui/design/build/outputs/roborazzi/*.png /tmp/shots/ 2>/dev/null || true
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
           git checkout --orphan ci-logs
           git rm -rf . > /dev/null 2>&1 || true
           git add -f "$name"
+          if ls /tmp/shots/*.png > /dev/null 2>&1; then
+            mkdir -p "shots-${GITHUB_REF_NAME//\//_}"
+            cp /tmp/shots/*.png "shots-${GITHUB_REF_NAME//\//_}/"
+            git add -f "shots-${GITHUB_REF_NAME//\//_}"
+          fi
           git commit -m "Build result for ${GITHUB_SHA}"
           git push --force origin ci-logs
