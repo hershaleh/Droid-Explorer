@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Publish build result to ci-logs branch (debug aid)
-        if: always() && github.event_name == 'push'
+        if: always() && github.event_name == 'push' && github.ref_name != 'main'
         shell: bash
         run: |
           name="result-${GITHUB_REF_NAME//\//_}.txt"
