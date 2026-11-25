@@ -30,4 +30,5 @@ dependencies {
     api(platform(libs.compose.bom))
     api(libs.compose.ui)
     api(libs.compose.material3)
+    api(libs.compose.material.icons.core)
 }

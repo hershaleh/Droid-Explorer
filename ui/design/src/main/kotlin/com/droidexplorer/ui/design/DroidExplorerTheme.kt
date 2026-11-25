@@ -2,51 +2,77 @@ package com.droidexplorer.ui.design
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
 
+val LocalFluentColors = staticCompositionLocalOf<FluentColors> { error("DroidExplorerTheme is missing") }
+val LocalFluentTypography = staticCompositionLocalOf<FluentTypography> { error("DroidExplorerTheme is missing") }
+
+/** Windows 11 corner radii: 4dp for controls, 8dp for overlays (flyouts, dialogs, windows). */
+object FluentShapes {
+    val control = RoundedCornerShape(4.dp)
+    val overlay = RoundedCornerShape(8.dp)
+}
+
+object FluentTheme {
+    val colors: FluentColors
+        @Composable @ReadOnlyComposable get() = LocalFluentColors.current
+    val typography: FluentTypography
+        @Composable @ReadOnlyComposable get() = LocalFluentTypography.current
+}
+
 /**
- * Original Droid Explorer design system, following Windows 11 patterns:
- * neutral surfaces, a single accent colour and rounded corners.
- * It does not copy Microsoft assets, fonts or code.
+ * Droid Explorer theme. All components read their look from [FluentTheme] (WinUI-style tokens).
+ * A Material3 theme is also provided only so that stock Compose pieces (text defaults, ripple-less
+ * surfaces) inherit sensible colours; Droid Explorer screens must not use Material components directly.
  */
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF0067C0),
-    onPrimary = Color(0xFFFFFFFF),
-    background = Color(0xFFF3F3F3),
-    onBackground = Color(0xFF1A1A1A),
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF1A1A1A),
-)
-
-private val DarkColors = darkColorScheme(
-    primary = Color(0xFF60CDFF),
-    onPrimary = Color(0xFF003355),
-    background = Color(0xFF202020),
-    onBackground = Color(0xFFFFFFFF),
-    surface = Color(0xFF2B2B2B),
-    onSurface = Color(0xFFFFFFFF),
-)
-
-private val WindowsLikeShapes = Shapes(
-    small = RoundedCornerShape(4.dp),
-    medium = RoundedCornerShape(8.dp),
-    large = RoundedCornerShape(8.dp),
-)
-
 @Composable
 fun DroidExplorerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        shapes = WindowsLikeShapes,
-        content = content,
-    )
+    val colors = remember(darkTheme) { if (darkTheme) darkFluentColors() else lightFluentColors() }
+    val typography = remember { fluentTypography() }
+    val materialColors = remember(colors) {
+        if (darkTheme) {
+            darkColorScheme(
+                primary = colors.accent,
+                onPrimary = colors.textOnAccent,
+                background = colors.windowBackground,
+                onBackground = colors.textPrimary,
+                surface = colors.windowBackground,
+                onSurface = colors.textPrimary,
+            )
+        } else {
+            lightColorScheme(
+                primary = colors.accent,
+                onPrimary = colors.textOnAccent,
+                background = colors.windowBackground,
+                onBackground = colors.textPrimary,
+                surface = colors.windowBackground,
+                onSurface = colors.textPrimary,
+            )
+        }
+    }
+    CompositionLocalProvider(
+        LocalFluentColors provides colors,
+        LocalFluentTypography provides typography,
+    ) {
+        MaterialTheme(colorScheme = materialColors) {
+            CompositionLocalProvider(
+                LocalContentColor provides colors.textPrimary,
+                LocalTextStyle provides typography.body,
+                content = content,
+            )
+        }
+    }
 }
