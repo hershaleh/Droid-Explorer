@@ -122,7 +122,7 @@ class ExplorerController(
         selection = if (path in selection) selection - path else selection + path
     }
 
-    fun setSort(order: SortOrder) {
+    fun changeSort(order: SortOrder) {
         sort = order
         items = Sorting.sort(items, order)
     }

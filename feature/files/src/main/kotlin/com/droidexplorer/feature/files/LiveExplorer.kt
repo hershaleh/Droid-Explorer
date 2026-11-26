@@ -104,7 +104,7 @@ fun LiveExplorerScreen(
         onRename = { dialog = Dialog.Rename },
         onShare = { onShare(controller.selection.toList()) },
         onDelete = { dialog = Dialog.Delete },
-        onSort = { key, asc -> controller.setSort(SortOrder(key, asc)) },
+        onSort = { key, asc -> controller.changeSort(SortOrder(key, asc)) },
     )
     ExplorerScreen(
         items = rows,
