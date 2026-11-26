@@ -1,6 +1,8 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -22,10 +24,14 @@ class ExplorerScreenshotTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun shot(name: String, dark: Boolean, rtl: Boolean) {
+    private fun shot(name: String, dark: Boolean, rtl: Boolean, fontScale: Float = 1f) {
         rule.setContent {
             val direction = if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
-            CompositionLocalProvider(LocalLayoutDirection provides direction) {
+            val base = LocalDensity.current
+            CompositionLocalProvider(
+                LocalLayoutDirection provides direction,
+                LocalDensity provides Density(base.density, fontScale),
+            ) {
                 DroidExplorerTheme(darkTheme = dark) { ExplorerScreen() }
             }
         }
@@ -47,4 +53,16 @@ class ExplorerScreenshotTest {
     @Test
     @Config(sdk = [34], qualifiers = "en-w412dp-h892dp-xxhdpi")
     fun phoneDarkLtrEnglish() = shot("explorer-phone-dark-ltr", dark = true, rtl = false)
+
+    @Test
+    @Config(sdk = [34], qualifiers = "he-w320dp-h568dp-xhdpi")
+    fun tinyPhoneLightRtlHebrew() = shot("explorer-tiny-light-rtl", dark = false, rtl = true)
+
+    @Test
+    @Config(sdk = [34], qualifiers = "en-w360dp-h640dp-xhdpi")
+    fun smallPhoneDarkLtrEnglish() = shot("explorer-small-dark-ltr", dark = true, rtl = false)
+
+    @Test
+    @Config(sdk = [34], qualifiers = "he-w360dp-h640dp-xhdpi")
+    fun smallPhoneLargeFontRtlHebrew() = shot("explorer-small-bigfont-rtl", dark = false, rtl = true, fontScale = 1.5f)
 }

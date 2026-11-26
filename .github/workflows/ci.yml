@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          gradle assembleDebug testDebugUnitTest :core:capabilities:test lintDebug --stacktrace --console=plain 2>&1 | tee build.log
+          gradle assembleDebug testDebugUnitTest :core:capabilities:test :storage:api:test :storage:local:test lintDebug --stacktrace --console=plain 2>&1 | tee build.log
 
       - name: Render component screenshots
         id: shots
