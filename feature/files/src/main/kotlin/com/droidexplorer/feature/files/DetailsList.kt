@@ -177,15 +177,33 @@ fun ExplorerDetailsList(
     actions: ExplorerActions = ExplorerActions(),
     grouped: Boolean = true,
     emptyText: String? = null,
+    revealPath: String? = null,
+    onRevealed: () -> Unit = {},
 ) {
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val groups = androidx.compose.runtime.remember(items, grouped) { if (grouped) {
         DateGroup.values().map { g -> g to items.filter { it.group == g } }.filter { it.second.isNotEmpty() }
     } else {
         listOf<Pair<DateGroup?, List<ExplorerItem>>>(null to items).filter { it.second.isNotEmpty() }
     } }
+    androidx.compose.runtime.LaunchedEffect(revealPath, groups) {
+        if (revealPath == null) return@LaunchedEffect
+        var index = 0
+        var found = -1
+        groups.forEach { (group, rows) ->
+            if (group != null) index++
+            rows.forEach { if (it.path == revealPath && found < 0) found = index; index++ }
+        }
+        if (found >= 0) {
+            val visible = listState.layoutInfo.visibleItemsInfo
+            val onScreen = visible.any { it.index == found }
+            if (!onScreen) listState.animateScrollToItem(found)
+            onRevealed()
+        }
+    }
     androidx.compose.foundation.layout.Column(modifier) {
         ColumnHeader(layout)
-        LazyColumn(Modifier.weight(1f)) {
+        LazyColumn(Modifier.weight(1f), state = listState) {
             groups.forEach { (group, rows) ->
                 if (group != null) item(key = "group-${group.name}") { GroupHeader(group, rows.size) }
                 items(rows, key = { it.path }) { ItemRow(it, layout, actions) }

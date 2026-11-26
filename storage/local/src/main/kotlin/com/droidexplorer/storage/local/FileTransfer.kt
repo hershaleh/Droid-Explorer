@@ -89,9 +89,15 @@ internal class FileTransfer(
             if (dst.exists() && !dst.isDirectory) {
                 dst = File(dst.parentFile, NameConflict.keepBothName(dst.name) { File(dst.parentFile, it).exists() })
             }
-            if (!dst.exists() && move && src.renameTo(dst)) {
-                countTree(src)
-                return dst
+            if (!dst.exists() && move) {
+                val items = itemCount(src)
+                val bytes = byteCount(src)
+                if (src.renameTo(dst)) {
+                    doneItems += items
+                    doneBytes += bytes
+                    report(dst.name, force = true)
+                    return dst
+                }
             }
             if (!dst.exists() && !dst.mkdirs()) throw StorageException("Cannot create: ${dst.path}")
             doneItems++
@@ -117,7 +123,7 @@ internal class FileTransfer(
             }
         }
         copyFile(src, dst)
-        if (move && !src.delete()) throw StorageException("Copied but could not remove the source: ${src.path}")
+        if (move && src.exists() && !src.delete()) throw StorageException("Copied but could not remove the source: ${src.path}")
         return dst
     }
 
@@ -166,18 +172,13 @@ internal class FileTransfer(
     }
 
     private fun count(f: File) {
-        countTree(f)
+        doneItems += itemCount(f)
+        doneBytes += byteCount(f)
     }
 
-    private fun countTree(f: File) {
-        if (f.isDirectory) {
-            doneItems++
-            f.listFiles()?.forEach { countTree(it) }
-        } else {
-            doneItems++
-            doneBytes += f.length()
-        }
-    }
+    private fun itemCount(f: File): Int = 1 + (f.listFiles()?.sumOf { itemCount(it) } ?: 0)
+
+    private fun byteCount(f: File): Long = if (f.isDirectory) (f.listFiles()?.sumOf { byteCount(it) } ?: 0L) else f.length()
 
     private fun checkCancelled() {
         if (listener.isCancelled()) throw CancelledException()

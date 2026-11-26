@@ -7,6 +7,8 @@ import com.droidexplorer.storage.api.SortOrder
 import com.droidexplorer.storage.api.Sorting
 import com.droidexplorer.storage.api.StorageItem
 import com.droidexplorer.storage.api.StorageProvider
+import com.droidexplorer.storage.api.TransferListener
+import com.droidexplorer.storage.api.TransferResult
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -105,6 +107,7 @@ class ExplorerController(
 
     var clipboard by mutableStateOf<List<String>>(emptyList()); private set
     var clipboardIsCut by mutableStateOf(false); private set
+    var revealPath by mutableStateOf<String?>(null); private set
 
     private val back = ArrayDeque<String>()
     private val forward = ArrayDeque<String>()
@@ -151,13 +154,22 @@ class ExplorerController(
     fun cutSelection() { clipboard = selection.toList(); clipboardIsCut = true }
 
     /** Each operation returns null on success or the error message. Blocking: run off the main thread. */
-    fun paste(): String? = attempt {
-        val target = currentPath
-        clipboard.forEach { src ->
-            if (clipboardIsCut) provider.move(src, target) else provider.copy(src, target)
-        }
-        if (clipboardIsCut) clipboard = emptyList()
+    fun paste(): String? = attempt { pasteWith(object : TransferListener {}).getOrThrow() }
+
+    /** Pastes the clipboard here with progress and conflict questions reported to [listener]. Blocking. */
+    fun pasteWith(listener: TransferListener): Result<TransferResult> = runCatching {
+        val result = provider.transfer(clipboard, currentPath, clipboardIsCut, listener)
+        if (clipboardIsCut && !result.cancelled) clipboard = emptyList()
+        result
     }
+
+    /** Select [paths] and scroll the first one into view once the listing has refreshed. */
+    fun selectAndReveal(paths: List<String>) {
+        selection = paths.toSet()
+        revealPath = paths.firstOrNull()
+    }
+
+    fun revealed() { revealPath = null }
 
     fun createFolder(name: String): String? = attempt { provider.createFolder(currentPath, name) }
 

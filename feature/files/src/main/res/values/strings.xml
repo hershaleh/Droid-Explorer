@@ -74,4 +74,18 @@
     <string name="menu">תפריט ניווט</string>
     <string name="address_edit">עריכת נתיב</string>
     <string name="path_not_found">הנתיב לא נמצא או שאין גישה אליו</string>
+    <string name="transfer_title">הושלם %1$d%%</string>
+    <string name="transfer_copying">מעתיק %1$d פריטים מ-%2$s אל %3$s</string>
+    <string name="transfer_moving">מעביר %1$d פריטים מ-%2$s אל %3$s</string>
+    <string name="transfer_name">שם: %1$s</string>
+    <string name="transfer_remaining">פריטים שנותרו: %1$d (%2$s)</string>
+    <string name="transfer_speed">מהירות: %1$s בשנייה</string>
+    <string name="conflict_title">החלפה או דילוג על קבצים</string>
+    <string name="conflict_body">ביעד כבר קיים קובץ בשם \"%1$s\"</string>
+    <string name="conflict_replace">החלף את הקובץ ביעד</string>
+    <string name="conflict_skip">דלג על קובץ זה</string>
+    <string name="conflict_keep">השאר את שני הקבצים</string>
+    <string name="conflict_all">בצע זאת לכל ההתנגשויות</string>
+    <string name="conflict_source">מקור: %1$s, %2$s</string>
+    <string name="conflict_existing">ביעד: %1$s, %2$s</string>
 </resources>

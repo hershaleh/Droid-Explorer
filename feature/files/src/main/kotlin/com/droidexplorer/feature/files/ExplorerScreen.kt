@@ -39,6 +39,8 @@ fun ExplorerScreen(
     emptyText: String? = null,
     interactive: Boolean = true,
     nav: NavPaneModel? = null,
+    revealPath: String? = null,
+    onRevealed: () -> Unit = {},
 ) {
     val c = FluentTheme.colors
     var navOpen by remember { mutableStateOf(false) }
@@ -68,7 +70,7 @@ fun ExplorerScreen(
                 )
                 Row(Modifier.weight(1f)) {
                     if (layout == ExplorerLayout.Wide) ExplorerNavPane(model = nav)
-                    ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, grouped, emptyText)
+                    ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, grouped, emptyText, revealPath, onRevealed)
                 }
                 ExplorerStatusBar(items)
             }

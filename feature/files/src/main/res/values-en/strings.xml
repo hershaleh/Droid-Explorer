@@ -74,4 +74,18 @@
     <string name="menu">Navigation menu</string>
     <string name="address_edit">Edit path</string>
     <string name="path_not_found">The path was not found or can\'t be accessed.</string>
+    <string name="transfer_title">%1$d%% complete</string>
+    <string name="transfer_copying">Copying %1$d items from %2$s to %3$s</string>
+    <string name="transfer_moving">Moving %1$d items from %2$s to %3$s</string>
+    <string name="transfer_name">Name: %1$s</string>
+    <string name="transfer_remaining">Items remaining: %1$d (%2$s)</string>
+    <string name="transfer_speed">Speed: %1$s/s</string>
+    <string name="conflict_title">Replace or Skip Files</string>
+    <string name="conflict_body">The destination already has a file named \"%1$s\"</string>
+    <string name="conflict_replace">Replace the file in the destination</string>
+    <string name="conflict_skip">Skip this file</string>
+    <string name="conflict_keep">Keep both files</string>
+    <string name="conflict_all">Do this for all conflicts</string>
+    <string name="conflict_source">From: %1$s, %2$s</string>
+    <string name="conflict_existing">In destination: %1$s, %2$s</string>
 </resources>

@@ -73,3 +73,13 @@ object SampleData {
         ExplorerItem("wallpaper.jpg", ItemKind.Image, "03/11/2026 07:44", 2304, DateGroup.EarlierThisMonth),
     )
 }
+
+/** "532 B", "1.2 MB" style size for dialogs (the details list keeps the Windows "1,204 KB" style). */
+fun formatBytes(bytes: Long): String {
+    if (bytes < 1024) return "$bytes B"
+    val units = arrayOf("KB", "MB", "GB", "TB")
+    var v = bytes / 1024.0
+    var i = 0
+    while (v >= 1024 && i < units.lastIndex) { v /= 1024; i++ }
+    return String.format(java.util.Locale.US, "%.1f %s", v, units[i])
+}

@@ -31,6 +31,8 @@ fun FluentContentDialog(
     modifier: Modifier = Modifier,
     secondaryText: String? = null,
     onSecondary: () -> Unit = onDismissRequest,
+    tertiaryText: String? = null,
+    onTertiary: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val c = FluentTheme.colors
@@ -55,19 +57,33 @@ fun FluentContentDialog(
                 Text(title, style = FluentTheme.typography.subtitle, color = c.textPrimary)
                 content()
             }
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(c.windowBackground)
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FluentButton(onClick = onPrimary, style = ButtonStyle.Accent, modifier = Modifier.weight(1f)) {
-                    Text(primaryText)
+            if (tertiaryText != null) {
+                // Three choices: stacked full-width buttons, like the Windows replace/skip dialog.
+                Column(
+                    Modifier.fillMaxWidth().background(c.windowBackground).padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FluentButton(onClick = onPrimary, style = ButtonStyle.Accent, modifier = Modifier.fillMaxWidth()) { Text(primaryText) }
+                    if (secondaryText != null) {
+                        FluentButton(onClick = onSecondary, modifier = Modifier.fillMaxWidth()) { Text(secondaryText) }
+                    }
+                    FluentButton(onClick = onTertiary, modifier = Modifier.fillMaxWidth()) { Text(tertiaryText) }
                 }
-                if (secondaryText != null) {
-                    FluentButton(onClick = onSecondary, modifier = Modifier.weight(1f)) {
-                        Text(secondaryText)
+            } else {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(c.windowBackground)
+                        .padding(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FluentButton(onClick = onPrimary, style = ButtonStyle.Accent, modifier = Modifier.weight(1f)) {
+                        Text(primaryText)
+                    }
+                    if (secondaryText != null) {
+                        FluentButton(onClick = onSecondary, modifier = Modifier.weight(1f)) {
+                            Text(secondaryText)
+                        }
                     }
                 }
             }
