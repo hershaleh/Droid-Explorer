@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -128,13 +129,14 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout) {
                 )
             }
             cols.modified?.let {
-                Text(
-                    item.modified,
-                    style = FluentTheme.typography.body,
-                    color = c.textPrimary,
-                    maxLines = 1,
-                    modifier = Modifier.width(it).padding(horizontal = 8.dp),
-                )
+                Box(Modifier.width(it).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterStart) {
+                    Text(
+                        item.modified,
+                        style = FluentTheme.typography.body.copy(textDirection = TextDirection.Ltr),
+                        color = c.textPrimary,
+                        maxLines = 1,
+                    )
+                }
             }
             cols.type?.let {
                 Text(
@@ -147,14 +149,14 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout) {
                 )
             }
             cols.size?.let {
-                Text(
-                    item.sizeKb?.let(::formatSizeKb).orEmpty(),
-                    style = FluentTheme.typography.body,
-                    color = c.textPrimary,
-                    maxLines = 1,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.width(it).padding(horizontal = 8.dp),
-                )
+                Box(Modifier.width(it).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterEnd) {
+                    Text(
+                        item.sizeKb?.let(::formatSizeKb).orEmpty(),
+                        style = FluentTheme.typography.body.copy(textDirection = TextDirection.Ltr),
+                        color = c.textPrimary,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }

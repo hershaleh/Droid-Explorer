@@ -33,7 +33,7 @@ class ExplorerScreenshotTest {
     }
 
     @Test
-    @Config(sdk = [34], qualifiers = "w1280dp-h800dp-xhdpi")
+    @Config(sdk = [34], qualifiers = "he-w1280dp-h800dp-xhdpi")
     fun tabletLightRtlHebrew() = shot("explorer-tablet-light-rtl", dark = false, rtl = true)
 
     @Test
@@ -41,7 +41,7 @@ class ExplorerScreenshotTest {
     fun tabletDarkLtrEnglish() = shot("explorer-tablet-dark-ltr", dark = true, rtl = false)
 
     @Test
-    @Config(sdk = [34], qualifiers = "w412dp-h892dp-xxhdpi")
+    @Config(sdk = [34], qualifiers = "he-w412dp-h892dp-xxhdpi")
     fun phoneLightRtlHebrew() = shot("explorer-phone-light-rtl", dark = false, rtl = true)
 
     @Test

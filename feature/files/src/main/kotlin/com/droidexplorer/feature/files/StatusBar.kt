@@ -56,7 +56,13 @@ fun ExplorerStatusBar(items: List<ExplorerItem>, modifier: Modifier = Modifier) 
                 stringResource(R.string.status_selected_many, selected.size)
             }
             val sum = selected.sumOf { it.sizeKb ?: 0L }
-            Text("$label   ${formatTotal(sum)}", style = FluentTheme.typography.caption, color = c.textPrimary)
+            Text(label, style = FluentTheme.typography.caption, color = c.textPrimary)
+            Spacer(Modifier.width(12.dp))
+            Text(
+                formatTotal(sum),
+                style = FluentTheme.typography.caption.copy(textDirection = androidx.compose.ui.text.style.TextDirection.Ltr),
+                color = c.textPrimary,
+            )
         }
         Spacer(Modifier.weight(1f))
         ViewToggle(FluentIcons.List, active = true)
