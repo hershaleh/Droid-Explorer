@@ -31,6 +31,8 @@ import com.droidexplorer.ui.design.controls.FluentContentDialog
 import com.droidexplorer.ui.design.controls.FluentTextBox
 import com.droidexplorer.ui.design.icons.FluentIcons
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -63,19 +65,25 @@ fun LiveExplorerScreen(
     val scope = rememberCoroutineScope()
     var dialog by remember { mutableStateOf<Dialog?>(null) }
 
-    LaunchedEffect(controller.currentPath, controller.refreshTick) {
-        withContext(Dispatchers.IO) { controller.load() }
+    LaunchedEffect(controller.currentPath, controller.refreshTick, controller.query, controller.showHidden) {
+        if (controller.query.isNotBlank()) delay(300) // let the person finish typing before walking the tree
+        withContext(Dispatchers.IO) { controller.load { isActive } }
     }
     BackHandler(enabled = controller.selection.isNotEmpty()) { controller.clearSelection() }
     BackHandler(enabled = controller.selection.isEmpty() && controller.canBack) { controller.goBack() }
 
     // Grouping boundaries and rows are computed once per listing, not on every recomposition.
     val atDevice = controller.currentPath == THIS_DEVICE
-    val baseRows = remember(controller.items, atDevice) {
+    val searching = controller.query.isNotBlank() && !atDevice
+    val baseRows = remember(controller.items, atDevice, searching) {
         val bounds = ItemMapping.GroupBounds(System.currentTimeMillis())
         controller.items.map {
             val row = ItemMapping.toRow(it, bounds, selected = false)
-            if (atDevice) row.copy(modified = "") else row
+            when {
+                atDevice -> row.copy(modified = "")
+                searching -> row.copy(location = it.path.removePrefix(controller.currentPath).removeSuffix("/" + it.name).trim('/').ifEmpty { null })
+                else -> row
+            }
         }
     }
     val selection = controller.selection
@@ -90,6 +98,9 @@ fun LiveExplorerScreen(
         listOf(device) + paths.mapIndexed { i, p -> if (i == 0) volumeLabel else p.substringAfterLast('/') }
     }
     val isDownloads = !atDevice && controller.currentPath.substringAfterLast('/') == "Download"
+    val effectiveGroup = controller.groupBy ?: if (isDownloads && !searching) GroupBy.Date else GroupBy.None
+    val searchHint = stringResource(R.string.search_in, crumbs.last())
+    val searchEmpty = stringResource(R.string.search_empty)
     val notFound = stringResource(R.string.path_not_found)
     val quick = listOf(
         QuickEntry(stringResource(R.string.nav_downloads), FluentIcons.Download, "Download"),
@@ -185,13 +196,24 @@ fun LiveExplorerScreen(
         onShare = { onShare(controller.selection.toList()) },
         onDelete = { dialog = Dialog.Delete },
         onSort = { key, asc -> controller.changeSort(SortOrder(key, asc)) },
+        viewMode = controller.viewMode,
+        onViewMode = controller::setViewMode,
+        groupBy = effectiveGroup,
+        onGroupBy = controller::setGroupBy,
+        showHidden = controller.showHidden,
+        onShowHidden = controller::changeShowHidden,
+        onSelectAll = controller::selectAll,
+        onSelectNone = controller::clearSelection,
+        onInvertSelection = controller::invertSelection,
+        query = controller.query,
+        onQuery = controller::setQuery,
+        searchHint = searchHint,
     )
     ExplorerScreen(
         items = rows,
         actions = actions,
         crumbs = crumbs,
         title = crumbs.last(),
-        grouped = isDownloads,
         revealPath = controller.revealPath,
         onRevealed = controller::revealed,
         nav = NavPaneModel(
@@ -202,7 +224,7 @@ fun LiveExplorerScreen(
             onNavigate = controller::navigate,
         ),
         emptyText = controller.error?.let { stringResource(R.string.folder_error) }
-            ?: stringResource(R.string.folder_empty),
+            ?: if (searching) searchEmpty else stringResource(R.string.folder_empty),
     )
 
     transferUi?.let { ui ->

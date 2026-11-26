@@ -90,8 +90,18 @@ private fun mimeOf(path: String): String =
 
 private fun android.content.Context.openFile(path: String) {
     try {
+        val isApk = File(path).extension.equals("apk", ignoreCase = true)
+        if (isApk && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+            // Android blocks installs until the person allows this app to install apps.
+            android.widget.Toast.makeText(this, getString(R.string.install_permission_needed), android.widget.Toast.LENGTH_LONG).show()
+            startActivity(
+                Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            return
+        }
         val intent = Intent(Intent.ACTION_VIEW)
-            .setDataAndType(uriFor(path), mimeOf(path))
+            .setDataAndType(uriFor(path), if (isApk) "application/vnd.android.package-archive" else mimeOf(path))
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     } catch (_: android.content.ActivityNotFoundException) {

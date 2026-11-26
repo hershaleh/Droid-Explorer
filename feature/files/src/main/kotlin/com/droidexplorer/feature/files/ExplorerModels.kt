@@ -18,6 +18,7 @@ data class ExplorerItem(
     val group: DateGroup,
     val selected: Boolean = false,
     val path: String = name,
+    val location: String? = null,
 )
 
 @Composable
@@ -82,4 +83,25 @@ fun formatBytes(bytes: Long): String {
     var i = 0
     while (v >= 1024 && i < units.lastIndex) { v /= 1024; i++ }
     return String.format(java.util.Locale.US, "%.1f %s", v, units[i])
+}
+
+enum class ViewMode { Details, List, Tiles, Icons }
+
+enum class GroupBy { None, Date, Type }
+
+/** Rows split into groups; the first item of a group stands for its header. None means one headerless group. */
+internal fun groupItems(items: List<ExplorerItem>, groupBy: GroupBy): List<Pair<ExplorerItem?, List<ExplorerItem>>> = when (groupBy) {
+    GroupBy.None -> if (items.isEmpty()) emptyList() else listOf<Pair<ExplorerItem?, List<ExplorerItem>>>(null to items)
+    GroupBy.Date -> items.groupBy { it.group }.toSortedMap().values.map { it.first() to it }
+    GroupBy.Type -> items.groupBy { it.kind }.toSortedMap().values.map { it.first() to it }
+}
+
+/** Index of [path] in a flat list that has one header row per group, or -1. */
+internal fun flatIndexOf(groups: List<Pair<ExplorerItem?, List<ExplorerItem>>>, path: String): Int {
+    var index = 0
+    groups.forEach { (header, rows) ->
+        if (header != null) index++
+        rows.forEach { if (it.path == path) return index; index++ }
+    }
+    return -1
 }

@@ -88,4 +88,16 @@
     <string name="conflict_all">Do this for all conflicts</string>
     <string name="conflict_source">From: %1$s, %2$s</string>
     <string name="conflict_existing">In destination: %1$s, %2$s</string>
+    <string name="view_list">List</string>
+    <string name="view_icons">Large icons</string>
+    <string name="menu_sort_by">Sort by</string>
+    <string name="menu_group_by">Group by</string>
+    <string name="group_none">None</string>
+    <string name="show_hidden">Hidden items</string>
+    <string name="select_all">Select all</string>
+    <string name="select_none">Select none</string>
+    <string name="select_invert">Invert selection</string>
+    <string name="search_in">Search %1$s</string>
+    <string name="search_empty">No items match your search.</string>
+    <string name="close">Close</string>
 </resources>

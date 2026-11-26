@@ -1,6 +1,7 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,11 +22,12 @@ import com.droidexplorer.ui.design.icons.FluentIcon
 import com.droidexplorer.ui.design.icons.FluentIcons
 
 @Composable
-private fun ViewToggle(icon: FluentIcons, active: Boolean) {
+private fun ViewToggle(icon: FluentIcons, active: Boolean, onClick: () -> Unit) {
     val c = FluentTheme.colors
     Box(
         Modifier
             .size(28.dp)
+            .clickable(onClick = onClick)
             .background(if (active) c.subtleFillSecondary else androidx.compose.ui.graphics.Color.Transparent, FluentShapes.control),
         contentAlignment = Alignment.Center,
     ) {
@@ -35,7 +37,12 @@ private fun ViewToggle(icon: FluentIcons, active: Boolean) {
 
 /** Status bar: item count, selection summary and the Details/Tiles view toggle at the end. */
 @Composable
-fun ExplorerStatusBar(items: List<ExplorerItem>, modifier: Modifier = Modifier) {
+fun ExplorerStatusBar(
+    items: List<ExplorerItem>,
+    viewMode: ViewMode = ViewMode.Details,
+    onViewMode: (ViewMode) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val c = FluentTheme.colors
     val selected = items.filter { it.selected }
     val total = if (items.size == 1) {
@@ -65,8 +72,8 @@ fun ExplorerStatusBar(items: List<ExplorerItem>, modifier: Modifier = Modifier) 
             )
         }
         Spacer(Modifier.weight(1f))
-        ViewToggle(FluentIcons.List, active = true)
+        ViewToggle(FluentIcons.List, active = viewMode == ViewMode.Details) { onViewMode(ViewMode.Details) }
         Spacer(Modifier.width(2.dp))
-        ViewToggle(FluentIcons.View, active = false)
+        ViewToggle(FluentIcons.View, active = viewMode == ViewMode.Icons) { onViewMode(ViewMode.Icons) }
     }
 }

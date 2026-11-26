@@ -88,4 +88,16 @@
     <string name="conflict_all">בצע זאת לכל ההתנגשויות</string>
     <string name="conflict_source">מקור: %1$s, %2$s</string>
     <string name="conflict_existing">ביעד: %1$s, %2$s</string>
+    <string name="view_list">רשימה</string>
+    <string name="view_icons">סמלים גדולים</string>
+    <string name="menu_sort_by">מיון לפי</string>
+    <string name="menu_group_by">קיבוץ לפי</string>
+    <string name="group_none">ללא</string>
+    <string name="show_hidden">פריטים מוסתרים</string>
+    <string name="select_all">בחר הכול</string>
+    <string name="select_none">בטל בחירה</string>
+    <string name="select_invert">הפוך בחירה</string>
+    <string name="search_in">חיפוש ב-%1$s</string>
+    <string name="search_empty">אין פריטים התואמים לחיפוש.</string>
+    <string name="close">סגירה</string>
 </resources>

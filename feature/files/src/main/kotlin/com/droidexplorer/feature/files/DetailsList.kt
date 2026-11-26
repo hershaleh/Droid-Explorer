@@ -1,7 +1,10 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.platform.testTag
+import com.droidexplorer.storage.api.SortKey
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
@@ -44,9 +47,16 @@ private fun ExplorerLayout.columns(fontScale: Float): Columns = when (this) {
 }
 
 @Composable
-private fun HeaderCell(text: String, modifier: Modifier, sorted: Boolean = false, alignEnd: Boolean = false) {
+private fun HeaderCell(
+    text: String,
+    modifier: Modifier,
+    sorted: Boolean = false,
+    ascending: Boolean = true,
+    alignEnd: Boolean = false,
+    onClick: () -> Unit = {},
+) {
     val c = FluentTheme.colors
-    Row(modifier.height(32.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.height(32.dp).clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = text,
             style = FluentTheme.typography.body,
@@ -55,25 +65,27 @@ private fun HeaderCell(text: String, modifier: Modifier, sorted: Boolean = false
             textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
         )
-        if (sorted) FluentIcon(FluentIcons.Up, tint = c.textSecondary, size = 10.dp)
+        if (sorted) FluentIcon(if (ascending) FluentIcons.Up else FluentIcons.ChevronDown, tint = c.textSecondary, size = 10.dp)
         Spacer(Modifier.width(6.dp))
         Box(Modifier.width(1.dp).height(20.dp).background(c.controlStrokeSecondary))
     }
 }
 
 @Composable
-private fun ColumnHeader(layout: ExplorerLayout) {
+private fun ColumnHeader(layout: ExplorerLayout, actions: ExplorerActions) {
     val cols = layout.columns(maxOf(1f, androidx.compose.ui.platform.LocalDensity.current.fontScale))
+    fun toggle(key: SortKey) = actions.onSort(key, if (actions.sortKey == key) !actions.sortAscending else true)
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-        HeaderCell(stringResource(R.string.col_name), Modifier.weight(1f), sorted = true)
-        cols.modified?.let { HeaderCell(stringResource(R.string.col_modified), Modifier.width(it)) }
-        cols.type?.let { HeaderCell(stringResource(R.string.col_type), Modifier.width(it)) }
-        cols.size?.let { HeaderCell(stringResource(R.string.col_size), Modifier.width(it), alignEnd = true) }
+        HeaderCell(stringResource(R.string.col_name), Modifier.weight(1f), actions.sortKey == SortKey.NAME, actions.sortAscending) { toggle(SortKey.NAME) }
+        cols.modified?.let { HeaderCell(stringResource(R.string.col_modified), Modifier.width(it), actions.sortKey == SortKey.MODIFIED, actions.sortAscending) { toggle(SortKey.MODIFIED) } }
+        cols.type?.let { HeaderCell(stringResource(R.string.col_type), Modifier.width(it), actions.sortKey == SortKey.TYPE, actions.sortAscending) { toggle(SortKey.TYPE) } }
+        cols.size?.let { HeaderCell(stringResource(R.string.col_size), Modifier.width(it), actions.sortKey == SortKey.SIZE, actions.sortAscending, alignEnd = true) { toggle(SortKey.SIZE) } }
     }
 }
 
 @Composable
-private fun GroupHeader(group: DateGroup, count: Int) {
+internal fun GroupHeader(sample: ExplorerItem, groupBy: GroupBy, count: Int) {
+    val title = if (groupBy == GroupBy.Type) sample.kind.typeLabel() else sample.group.label()
     val c = FluentTheme.colors
     Row(
         Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 4.dp),
@@ -81,7 +93,7 @@ private fun GroupHeader(group: DateGroup, count: Int) {
     ) {
         FluentIcon(FluentIcons.ChevronDown, tint = c.textSecondary, size = 10.dp)
         Spacer(Modifier.width(8.dp))
-        Text("${group.label()} ($count)", style = FluentTheme.typography.bodyStrong, color = c.textPrimary)
+        Text("$title ($count)", style = FluentTheme.typography.bodyStrong, color = c.textPrimary)
         Spacer(Modifier.width(12.dp))
         Box(Modifier.weight(1f).height(1.dp).background(c.controlStrokeSecondary))
     }
@@ -133,6 +145,10 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                item.location?.let { loc ->
+                    Spacer(Modifier.width(10.dp))
+                    Text(loc, style = FluentTheme.typography.caption, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
             cols.modified?.let {
                 Box(Modifier.width(it).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterStart) {
@@ -168,44 +184,33 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
     }
 }
 
-/** Details view: sortable column header, date groups with a rule line, and rows with a selection pill. */
+/** Details view: sortable column header, optional groups with a rule line, and rows with a selection pill. */
 @Composable
 fun ExplorerDetailsList(
     items: List<ExplorerItem>,
     layout: ExplorerLayout,
     modifier: Modifier = Modifier,
     actions: ExplorerActions = ExplorerActions(),
-    grouped: Boolean = true,
     emptyText: String? = null,
     revealPath: String? = null,
     onRevealed: () -> Unit = {},
 ) {
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-    val groups = androidx.compose.runtime.remember(items, grouped) { if (grouped) {
-        DateGroup.values().map { g -> g to items.filter { it.group == g } }.filter { it.second.isNotEmpty() }
-    } else {
-        listOf<Pair<DateGroup?, List<ExplorerItem>>>(null to items).filter { it.second.isNotEmpty() }
-    } }
+    val groupBy = actions.groupBy
+    val groups = androidx.compose.runtime.remember(items, groupBy) { groupItems(items, groupBy) }
     androidx.compose.runtime.LaunchedEffect(revealPath, groups) {
         if (revealPath == null) return@LaunchedEffect
-        var index = 0
-        var found = -1
-        groups.forEach { (group, rows) ->
-            if (group != null) index++
-            rows.forEach { if (it.path == revealPath && found < 0) found = index; index++ }
-        }
+        val found = flatIndexOf(groups, revealPath)
         if (found >= 0) {
-            val visible = listState.layoutInfo.visibleItemsInfo
-            val onScreen = visible.any { it.index == found }
-            if (!onScreen) listState.animateScrollToItem(found)
+            if (listState.layoutInfo.visibleItemsInfo.none { it.index == found }) listState.animateScrollToItem(found)
             onRevealed()
         }
     }
-    androidx.compose.foundation.layout.Column(modifier) {
-        ColumnHeader(layout)
+    androidx.compose.foundation.layout.Column(modifier.testTag("view-details")) {
+        ColumnHeader(layout, actions)
         LazyColumn(Modifier.weight(1f), state = listState) {
-            groups.forEach { (group, rows) ->
-                if (group != null) item(key = "group-${group.name}") { GroupHeader(group, rows.size) }
+            groups.forEach { (header, rows) ->
+                if (header != null) item(key = "group-${header.group.name}-${header.kind.name}") { GroupHeader(header, groupBy, rows.size) }
                 items(rows, key = { it.path }) { ItemRow(it, layout, actions) }
             }
             if (items.isEmpty() && emptyText != null) {

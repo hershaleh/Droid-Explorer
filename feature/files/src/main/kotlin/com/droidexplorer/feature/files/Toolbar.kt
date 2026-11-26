@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +43,10 @@ import com.droidexplorer.ui.design.FluentShapes
 import com.droidexplorer.ui.design.FluentTheme
 import com.droidexplorer.ui.design.controls.ButtonStyle
 import com.droidexplorer.ui.design.controls.FluentButton
+import com.droidexplorer.ui.design.controls.FluentDropdownMenu
+import com.droidexplorer.ui.design.controls.FluentMenuDivider
+import com.droidexplorer.ui.design.controls.FluentMenuHeader
+import com.droidexplorer.ui.design.controls.FluentMenuItem
 import com.droidexplorer.ui.design.controls.FluentTextBox
 import com.droidexplorer.ui.design.icons.FluentIcon
 import com.droidexplorer.ui.design.icons.FluentIcons
@@ -72,6 +74,31 @@ fun ExplorerToolbar(
     actions: ExplorerActions = ExplorerActions(),
     crumbs: List<String>? = null,
 ) {
+    var searchOpen by remember { mutableStateOf(false) }
+    val hint = actions.searchHint ?: stringResource(R.string.search_hint)
+    if (searchOpen && !showSearchBox) {
+        // Phone: the search box takes over the whole row until it is closed.
+        val focus = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focus.requestFocus() }
+        Row(
+            modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            ToolbarIconButton(FluentIcons.Close, true, stringResource(R.string.close)) {
+                searchOpen = false
+                actions.onQuery("")
+            }
+            FluentTextBox(
+                value = actions.query,
+                onValueChange = actions.onQuery,
+                placeholder = hint,
+                modifier = Modifier.weight(1f).focusRequester(focus).testTag("search-input"),
+                trailing = { FluentIcon(FluentIcons.Search, tint = FluentTheme.colors.textSecondary) },
+            )
+        }
+        return
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -88,16 +115,15 @@ fun ExplorerToolbar(
         AddressBar(Modifier.weight(1f), crumbs, actions.onCrumb, actions.editablePath, actions.onPathSubmit)
         Spacer(Modifier.width(6.dp))
         if (showSearchBox) {
-            var query by remember { mutableStateOf("") }
             FluentTextBox(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = stringResource(R.string.search_hint),
-                modifier = Modifier.width(280.dp),
+                value = actions.query,
+                onValueChange = actions.onQuery,
+                placeholder = hint,
+                modifier = Modifier.width(280.dp).testTag("search-input"),
                 trailing = { FluentIcon(FluentIcons.Search, tint = FluentTheme.colors.textSecondary) },
             )
         } else {
-            ToolbarIconButton(FluentIcons.Search, true, stringResource(R.string.search))
+            ToolbarIconButton(FluentIcons.Search, true, stringResource(R.string.search)) { searchOpen = true }
         }
     }
 }
@@ -230,13 +256,8 @@ private fun SortMenu(actions: ExplorerActions, showLabel: Boolean) {
     var open by remember { mutableStateOf(false) }
     Box {
         CommandLabeled(FluentIcons.Sort, stringResource(R.string.cmd_sort), showLabel, chevron = true) { open = true }
-        val c = FluentTheme.colors
-        DropdownMenu(
-            expanded = open,
-            onDismissRequest = { open = false },
-            containerColor = c.layer,
-            shape = FluentShapes.overlay,
-        ) {
+        FluentDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            FluentMenuHeader(stringResource(R.string.menu_sort_by))
             val keys = listOf(
                 SortKey.NAME to R.string.col_name,
                 SortKey.MODIFIED to R.string.col_modified,
@@ -244,30 +265,60 @@ private fun SortMenu(actions: ExplorerActions, showLabel: Boolean) {
                 SortKey.SIZE to R.string.col_size,
             )
             keys.forEach { (key, label) ->
-                DropdownMenuItem(
-                    text = { MenuText(stringResource(label), checked = actions.sortKey == key) },
+                FluentMenuItem(
+                    text = stringResource(label),
+                    checked = actions.sortKey == key,
                     onClick = { open = false; actions.onSort(key, actions.sortAscending) },
                 )
             }
-            DropdownMenuItem(
-                text = { MenuText(stringResource(R.string.sort_asc), checked = actions.sortAscending) },
-                onClick = { open = false; actions.onSort(actions.sortKey, true) },
-            )
-            DropdownMenuItem(
-                text = { MenuText(stringResource(R.string.sort_desc), checked = !actions.sortAscending) },
-                onClick = { open = false; actions.onSort(actions.sortKey, false) },
+            FluentMenuDivider()
+            FluentMenuItem(stringResource(R.string.sort_asc), { open = false; actions.onSort(actions.sortKey, true) }, checked = actions.sortAscending)
+            FluentMenuItem(stringResource(R.string.sort_desc), { open = false; actions.onSort(actions.sortKey, false) }, checked = !actions.sortAscending)
+            FluentMenuDivider()
+            FluentMenuHeader(stringResource(R.string.menu_group_by))
+            FluentMenuItem(stringResource(R.string.group_none), { open = false; actions.onGroupBy(GroupBy.None) }, checked = actions.groupBy == GroupBy.None)
+            FluentMenuItem(stringResource(R.string.col_modified), { open = false; actions.onGroupBy(GroupBy.Date) }, checked = actions.groupBy == GroupBy.Date)
+            FluentMenuItem(stringResource(R.string.col_type), { open = false; actions.onGroupBy(GroupBy.Type) }, checked = actions.groupBy == GroupBy.Type)
+        }
+    }
+}
+
+@Composable
+private fun ViewMenu(actions: ExplorerActions, showLabel: Boolean) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        CommandLabeled(FluentIcons.View, stringResource(R.string.cmd_view), showLabel, chevron = true) { open = true }
+        FluentDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            listOf(
+                ViewMode.Icons to R.string.view_icons,
+                ViewMode.List to R.string.view_list,
+                ViewMode.Details to R.string.view_details,
+                ViewMode.Tiles to R.string.view_tiles,
+            ).forEach { (mode, label) ->
+                FluentMenuItem(stringResource(label), { open = false; actions.onViewMode(mode) }, checked = actions.viewMode == mode)
+            }
+            FluentMenuDivider()
+            FluentMenuItem(
+                stringResource(R.string.show_hidden),
+                { open = false; actions.onShowHidden(!actions.showHidden) },
+                checked = actions.showHidden,
             )
         }
     }
 }
 
 @Composable
-private fun MenuText(text: String, checked: Boolean) {
-    Text(
-        (if (checked) "\u2713  " else "\u2003 ") + text,
-        style = FluentTheme.typography.body,
-        color = FluentTheme.colors.textPrimary,
-    )
+private fun MoreMenu(actions: ExplorerActions) {
+    var open by remember { mutableStateOf(false) }
+    val label = stringResource(R.string.cmd_more)
+    Box {
+        ToolbarIconButton(FluentIcons.More, true, label) { open = true }
+        FluentDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            FluentMenuItem(stringResource(R.string.select_all), { open = false; actions.onSelectAll() })
+            FluentMenuItem(stringResource(R.string.select_none), { open = false; actions.onSelectNone() })
+            FluentMenuItem(stringResource(R.string.select_invert), { open = false; actions.onInvertSelection() })
+        }
+    }
 }
 
 /**
@@ -303,8 +354,8 @@ fun ExplorerCommandBar(
         CommandIcon(FluentIcons.Delete, hasSelection, stringResource(R.string.cmd_delete), actions.onDelete)
         CommandDivider()
         SortMenu(actions, showLabel = !compact)
-        CommandLabeled(FluentIcons.View, stringResource(R.string.cmd_view), showLabel = !compact, chevron = true, enabled = false)
+        ViewMenu(actions, showLabel = !compact)
         CommandDivider()
-        CommandIcon(FluentIcons.More, false, stringResource(R.string.cmd_more))
+        MoreMenu(actions)
     }
 }

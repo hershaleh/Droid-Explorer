@@ -108,6 +108,11 @@ class ExplorerController(
     var clipboard by mutableStateOf<List<String>>(emptyList()); private set
     var clipboardIsCut by mutableStateOf(false); private set
     var revealPath by mutableStateOf<String?>(null); private set
+    var viewMode by mutableStateOf(ViewMode.Details); private set
+    /** null = automatic: grouped by date in Downloads, ungrouped elsewhere, as in Windows. */
+    var groupBy by mutableStateOf<GroupBy?>(null); private set
+    var showHidden by mutableStateOf(false); private set
+    var query by mutableStateOf(""); private set
 
     private val back = ArrayDeque<String>()
     private val forward = ArrayDeque<String>()
@@ -124,6 +129,7 @@ class ExplorerController(
     private fun isVolumeRoot(path: String) = volumes.any { it.path.trimEnd('/') == path.trimEnd('/') }
 
     fun navigate(path: String) {
+        query = ""
         if (path == currentPath) return
         back.addLast(currentPath)
         forward.clear()
@@ -200,6 +206,13 @@ class ExplorerController(
 
     fun clearSelection() { selection = emptySet() }
 
+    fun selectAll() { selection = items.map { it.path }.toSet() }
+    fun invertSelection() { selection = items.map { it.path }.toSet() - selection }
+    fun setViewMode(mode: ViewMode) { viewMode = mode }
+    fun setGroupBy(mode: GroupBy) { groupBy = mode }
+    fun changeShowHidden(value: Boolean) { showHidden = value }
+    fun setQuery(text: String) { query = text }
+
     /** Breadcrumb paths from the containing volume's root to [currentPath] (empty on the "This device" page). */
     fun crumbPaths(): List<String> {
         if (currentPath == THIS_DEVICE) return emptyList()
@@ -213,22 +226,43 @@ class ExplorerController(
         return result
     }
 
-    /** Blocking; call from an IO dispatcher. */
-    fun load() {
+    /** Blocking; call from an IO dispatcher. [isActive] lets a long search stop when the query changes. */
+    fun load(isActive: () -> Boolean = { true }) {
         val path = currentPath
+        val q = query.trim()
+        if (q.isNotEmpty() && path != THIS_DEVICE) {
+            val found = search(path, q, isActive)
+            if (isActive()) { items = Sorting.sort(found, sort); error = null }
+            return
+        }
         if (path == THIS_DEVICE) {
             items = volumes.map { StorageItem(it.path, it.label.ifEmpty { it.path }, true, 0, 0, false) }
             error = null
             return
         }
         try {
-            val listed = Sorting.sort(provider.list(path), sort)
+            val listed = Sorting.sort(provider.list(path, showHidden), sort)
             items = listed
             error = null
         } catch (e: Exception) {
             items = emptyList()
             error = e.message ?: "error"
         }
+    }
+
+    /** Breadth-first search of [root] and everything below it by name (case-insensitive), at most 2000 hits. */
+    private fun search(root: String, text: String, isActive: () -> Boolean): List<StorageItem> {
+        val hits = mutableListOf<StorageItem>()
+        val queue = ArrayDeque(listOf(root))
+        while (queue.isNotEmpty() && hits.size < 2000 && isActive()) {
+            val folder = queue.removeFirst()
+            val children = try { provider.list(folder, showHidden) } catch (_: Exception) { continue }
+            for (child in children) {
+                if (child.name.contains(text, ignoreCase = true)) hits += child
+                if (child.isDirectory) queue.addLast(child.path)
+            }
+        }
+        return hits
     }
 
     private fun go(path: String) {

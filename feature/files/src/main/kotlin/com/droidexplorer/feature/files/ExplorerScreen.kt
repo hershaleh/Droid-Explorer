@@ -35,7 +35,6 @@ fun ExplorerScreen(
     actions: ExplorerActions = ExplorerActions(),
     crumbs: List<String>? = null,
     title: String? = null,
-    grouped: Boolean = true,
     emptyText: String? = null,
     interactive: Boolean = true,
     nav: NavPaneModel? = null,
@@ -70,9 +69,13 @@ fun ExplorerScreen(
                 )
                 Row(Modifier.weight(1f)) {
                     if (layout == ExplorerLayout.Wide) ExplorerNavPane(model = nav)
-                    ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, grouped, emptyText, revealPath, onRevealed)
+                    if (actions.viewMode == ViewMode.Details) {
+                        ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, emptyText, revealPath, onRevealed)
+                    } else {
+                        ExplorerGridList(items, actions.viewMode, Modifier.weight(1f), actions, emptyText, revealPath, onRevealed)
+                    }
                 }
-                ExplorerStatusBar(items)
+                ExplorerStatusBar(items, actions.viewMode, actions.onViewMode)
             }
         }
         if (navOpen && nav != null && layout != ExplorerLayout.Wide) {

@@ -1,5 +1,6 @@
 package com.droidexplorer.feature.files
 
+import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -105,6 +106,53 @@ class LiveExplorerInteractionTest {
         rule.onNodeWithTag("address-input").performTextReplacement(File(root, "Sub").path)
         rule.onNodeWithTag("address-input").performImeAction()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
+    }
+
+    @Test fun searchFiltersByNameInsideSubfolders() {
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 0 }
+        rule.onNodeWithTag("search-input").performTextReplacement("note")
+        rule.waitUntil(8000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
+        assertEquals(0, rule.onAllNodesWithTextCount("inner"))
+    }
+
+    @Test fun viewMenuSwitchesToTilesAndStatusToggleBack() {
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 0 }
+        rule.onNodeWithText("View").performClick()
+        rule.onNodeWithText("Tiles").performClick()
+        rule.onNodeWithTag("view-tiles").assertExists()
+        rule.onNodeWithText("View").performClick()
+        rule.onNodeWithText("Details").performClick()
+        rule.onNodeWithTag("view-details").assertExists()
+    }
+
+    @Test fun moreMenuSelectAllEnablesDelete() {
+        openSub()
+        rule.onNodeWithContentDescription("See more").performClick()
+        rule.onNodeWithText("Select all").performClick()
+        rule.onNodeWithContentDescription("Delete").assertIsEnabled()
+    }
+
+    @Test fun hiddenItemsAppearWhenToggled() {
+        File(root, ".secret").writeText("x")
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 0 }
+        assertEquals(0, rule.onAllNodesWithTextCount(".secret"))
+        rule.onNodeWithText("View").performClick()
+        rule.onNodeWithText("Hidden items").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount(".secret") > 0 }
+    }
+
+    @Test fun conflictDialogReplaceOverwrites() {
+        File(root, "a.txt").writeText("new")
+        File(root, "Sub/a.txt").writeText("old")
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("a.txt") > 0 }
+        rule.onNodeWithText("a.txt").performTouchInput { longClick() }
+        rule.onNodeWithContentDescription("Copy").performClick()
+        rule.onNodeWithText("Sub").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
+        rule.onNodeWithContentDescription("Paste").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Replace the file in the destination") > 0 }
+        rule.onNodeWithText("Replace the file in the destination").performClick()
+        rule.waitUntil(5000) { File(root, "Sub/a.txt").readText() == "new" }
     }
 
     private fun androidx.compose.ui.test.SemanticsNodeInteraction.isDisplayedSafe() =

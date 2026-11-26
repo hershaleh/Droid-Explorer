@@ -8,4 +8,5 @@
     <string name="share_files_only">Only files can be shared, not folders</string>
     <string name="volume_internal">Internal storage</string>
     <string name="open_failed">Could not open the file</string>
+    <string name="install_permission_needed">To install APK files, allow this app to install apps in settings, then tap the file again.</string>
 </resources>
