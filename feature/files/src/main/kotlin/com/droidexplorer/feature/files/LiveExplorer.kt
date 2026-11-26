@@ -63,6 +63,8 @@ fun LiveExplorerScreen(
 ) {
     val controller = remember(provider, rootPath, volumes) { ExplorerController(provider, rootPath, volumes = volumes) }
     val scope = rememberCoroutineScope()
+    val tree = remember(provider) { NavTreeState(provider) }
+    LaunchedEffect(controller.refreshTick) { tree.invalidate() }
     var dialog by remember { mutableStateOf<Dialog?>(null) }
 
     LaunchedEffect(controller.currentPath, controller.refreshTick, controller.query, controller.showHidden) {
@@ -218,6 +220,7 @@ fun LiveExplorerScreen(
         revealPath = controller.revealPath,
         onRevealed = controller::revealed,
         nav = NavPaneModel(
+            tree = tree,
             quick = quick,
             volumes = controller.volumes,
             currentPath = controller.currentPath,

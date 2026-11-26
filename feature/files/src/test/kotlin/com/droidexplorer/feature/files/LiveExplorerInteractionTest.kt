@@ -107,6 +107,16 @@ class LiveExplorerInteractionTest {
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
     }
 
+    @Test fun navigationTreeExpandsFoldersLikeWindows() {
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 1 }
+        assertEquals(0, rule.onAllNodesWithTextCount("inner"))
+        rule.onNodeWithTag("nav-toggle-" + File(root, "Sub").path).performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("inner") > 0 }
+        // Clicking a tree folder navigates to it.
+        rule.onNodeWithText("inner").performClick()
+        rule.waitUntil(5000) { rule.onNodeWithTag("crumb-3").isDisplayedSafe() }
+    }
+
     @Test fun searchFiltersByNameInsideSubfolders() {
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 0 }
         rule.onNodeWithTag("search-input").performTextReplacement("note")

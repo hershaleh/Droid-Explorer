@@ -1,6 +1,14 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.platform.testTag
+import com.droidexplorer.storage.api.SortOrder
+import com.droidexplorer.storage.api.Sorting
+import com.droidexplorer.storage.api.StorageProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +46,8 @@ private fun NavTreeItem(
     expanded: Boolean? = null,
     selected: Boolean = false,
     onClick: (() -> Unit)? = null,
+    onToggle: (() -> Unit)? = null,
+    toggleTag: String? = null,
 ) {
     val c = FluentTheme.colors
     Box(
@@ -59,10 +69,16 @@ private fun NavTreeItem(
             )
         }
         Row(
-            Modifier.align(Alignment.CenterStart).padding(start = (8 + depth * 16).dp, end = 8.dp),
+            Modifier.align(Alignment.CenterStart).padding(start = (4 + depth * 16).dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .size(width = 24.dp, height = 32.dp)
+                    .then(if (onToggle != null && expanded != null) Modifier.clickable(onClick = onToggle) else Modifier)
+                    .then(if (toggleTag != null) Modifier.testTag(toggleTag) else Modifier),
+                contentAlignment = Alignment.Center,
+            ) {
                 if (expanded != null) {
                     FluentIcon(
                         if (expanded) FluentIcons.ChevronDown else FluentIcons.ChevronRight,
@@ -71,7 +87,6 @@ private fun NavTreeItem(
                     )
                 }
             }
-            Spacer(Modifier.width(4.dp))
             Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) { icon() }
             Spacer(Modifier.width(10.dp))
             Text(
@@ -99,8 +114,40 @@ private fun NavDivider() {
 /** A Quick access shortcut shown in the live navigation pane. */
 data class QuickEntry(val label: String, val icon: FluentIcons, val path: String)
 
+/**
+ * Expanded/collapsed state and lazily loaded sub-folders of the navigation tree.
+ * "This device" and "Quick access" start expanded, like in Windows.
+ */
+class NavTreeState(private val provider: StorageProvider) {
+    private val expanded = mutableStateMapOf(THIS_DEVICE to true, QUICK_ACCESS to true)
+    private val loaded = mutableStateMapOf<String, List<String>>()
+
+    fun isExpanded(key: String) = expanded[key] == true
+    fun expand(key: String) { expanded[key] = true }
+    fun toggle(key: String) { expanded[key] = !isExpanded(key) }
+    fun childrenOf(path: String): List<String>? = loaded[path]
+
+    /** Forget loaded folders so expanded nodes reload (after a refresh or a file operation). */
+    fun invalidate() = loaded.clear()
+
+    suspend fun load(path: String) {
+        if (loaded.containsKey(path)) return
+        val folders = withContext(Dispatchers.IO) {
+            try {
+                Sorting.sort(provider.list(path, false).filter { it.isDirectory }, SortOrder()).map { it.path }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+        loaded[path] = folders
+    }
+
+    companion object { const val QUICK_ACCESS = "::quick-access" }
+}
+
 /** What the live navigation pane shows and does. Only working destinations are listed. */
 data class NavPaneModel(
+    val tree: NavTreeState,
     val quick: List<QuickEntry>,
     val volumes: List<VolumeInfo>,
     val currentPath: String,
@@ -109,9 +156,40 @@ data class NavPaneModel(
 )
 
 @Composable
+private fun FolderNode(path: String, label: String, icon: @Composable () -> Unit, depth: Int, model: NavPaneModel) {
+    val tree = model.tree
+    val open = tree.isExpanded(path)
+    val kids = tree.childrenOf(path)
+    LaunchedEffect(path, open, kids == null) { if (open) tree.load(path) }
+    NavTreeItem(
+        label = label,
+        icon = icon,
+        depth = depth,
+        expanded = if (kids != null && kids.isEmpty()) null else open,
+        selected = model.currentPath == path,
+        onClick = { model.onNavigate(path) },
+        onToggle = { tree.toggle(path) },
+        toggleTag = "nav-toggle-$path",
+    )
+    if (open) kids?.forEach { child -> FolderNode(child, child.substringAfterLast('/'), { FolderGlyph() }, depth + 1, model) }
+}
+
+@Composable
 private fun LiveNavPane(model: NavPaneModel, modifier: Modifier) {
     val c = FluentTheme.colors
     val internal = stringResource(R.string.addr_internal)
+    val tree = model.tree
+    // Open the tree down to the folder being shown, so it is always visible and highlighted.
+    LaunchedEffect(model.currentPath) {
+        val root = model.volumeFor(model.currentPath)?.path ?: return@LaunchedEffect
+        if (!model.currentPath.startsWith(root)) return@LaunchedEffect
+        tree.expand(root)
+        var acc = root.trimEnd('/')
+        model.currentPath.removePrefix(root).trim('/').split('/').filter { it.isNotEmpty() }.dropLast(1).forEach {
+            acc = "$acc/$it"
+            tree.expand(acc)
+        }
+    }
     Column(
         modifier = modifier
             .width(260.dp)
@@ -123,34 +201,33 @@ private fun LiveNavPane(model: NavPaneModel, modifier: Modifier) {
         NavTreeItem(
             stringResource(R.string.nav_quick_access),
             { FluentIcon(FluentIcons.Home, tint = c.accent) },
-            expanded = true,
+            expanded = tree.isExpanded(NavTreeState.QUICK_ACCESS),
+            onToggle = { tree.toggle(NavTreeState.QUICK_ACCESS) },
         )
-        model.quick.forEach { q ->
-            NavTreeItem(
-                q.label,
-                { FluentIcon(q.icon) },
-                depth = 1,
-                selected = model.currentPath == q.path,
-                onClick = { model.onNavigate(q.path) },
-            )
+        if (tree.isExpanded(NavTreeState.QUICK_ACCESS)) {
+            model.quick.forEach { q ->
+                NavTreeItem(
+                    q.label,
+                    { FluentIcon(q.icon) },
+                    depth = 1,
+                    selected = model.currentPath == q.path,
+                    onClick = { model.onNavigate(q.path) },
+                )
+            }
         }
         NavDivider()
         NavTreeItem(
             stringResource(R.string.nav_this_device),
             { FluentIcon(FluentIcons.Network) },
-            expanded = true,
+            expanded = tree.isExpanded(THIS_DEVICE),
             selected = model.currentPath == THIS_DEVICE,
             onClick = { model.onNavigate(THIS_DEVICE) },
+            onToggle = { tree.toggle(THIS_DEVICE) },
         )
-        val activeVolume = model.volumeFor(model.currentPath)
-        model.volumes.forEach { v ->
-            NavTreeItem(
-                v.label.ifEmpty { internal },
-                { FluentIcon(FluentIcons.Drive) },
-                depth = 1,
-                selected = activeVolume == v && model.quick.none { it.path == model.currentPath },
-                onClick = { model.onNavigate(v.path) },
-            )
+        if (tree.isExpanded(THIS_DEVICE)) {
+            model.volumes.forEach { v ->
+                FolderNode(v.path, v.label.ifEmpty { internal }, { FluentIcon(FluentIcons.Drive) }, 1, model)
+            }
         }
     }
 }
