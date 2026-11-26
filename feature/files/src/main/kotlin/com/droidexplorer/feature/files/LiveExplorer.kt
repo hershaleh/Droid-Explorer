@@ -189,8 +189,9 @@ fun LiveExplorerScreen(
         sortKey = controller.sort.key,
         sortAscending = controller.sort.ascending,
         onNewFolder = { dialog = Dialog.NewFolder },
-        onCut = controller::cutSelection,
-        onCopy = controller::copySelection,
+        // Leaving selection mode after Cut/Copy lets a tap open folders again, so the person can go and paste.
+        onCut = { controller.cutSelection(); controller.clearSelection() },
+        onCopy = { controller.copySelection(); controller.clearSelection() },
         onPaste = ::startPaste,
         onRename = { dialog = Dialog.Rename },
         onShare = { onShare(controller.selection.toList()) },
