@@ -7,4 +7,5 @@
     <string name="perm_button">פתיחת ההגדרות</string>
     <string name="no_app_to_open">לא נמצאה אפליקציה שיכולה לפתוח את הקובץ</string>
     <string name="share_files_only">ניתן לשתף קבצים בלבד, לא תיקיות</string>
+    <string name="volume_internal">אחסון פנימי</string>
 </resources>

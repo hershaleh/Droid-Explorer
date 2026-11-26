@@ -80,6 +80,12 @@ object ItemMapping {
     )
 }
 
+/** A storage volume (internal storage, SD card, USB drive) shown under "This device". */
+data class VolumeInfo(val label: String, val path: String, val removable: Boolean = false)
+
+/** Virtual location listing all volumes, like "This PC" in Windows. */
+const val THIS_DEVICE = "::this-device"
+
 /**
  * Navigation state of one Explorer tab: current folder, back/forward history, selection and sort.
  * Listing is done by the caller off the main thread via [load].
@@ -88,6 +94,7 @@ class ExplorerController(
     private val provider: StorageProvider,
     val rootPath: String,
     startPath: String = rootPath,
+    val volumes: List<VolumeInfo> = listOf(VolumeInfo("", rootPath)),
 ) {
     var currentPath by mutableStateOf(startPath); private set
     var items by mutableStateOf<List<StorageItem>>(emptyList()); private set
@@ -104,7 +111,14 @@ class ExplorerController(
 
     val canBack get() = back.isNotEmpty()
     val canForward get() = forward.isNotEmpty()
-    val canUp get() = currentPath != rootPath && parentOf(currentPath) != null
+    val canUp get() = currentPath != THIS_DEVICE && (isVolumeRoot(currentPath) || parentOf(currentPath) != null)
+
+    /** The volume containing [path] (the most specific one), or null for the virtual "This device" page. */
+    fun volumeFor(path: String): VolumeInfo? = volumes
+        .filter { path == it.path || path.startsWith(it.path.trimEnd('/') + "/") }
+        .maxByOrNull { it.path.length }
+
+    private fun isVolumeRoot(path: String) = volumes.any { it.path.trimEnd('/') == path.trimEnd('/') }
 
     fun navigate(path: String) {
         if (path == currentPath) return
@@ -115,7 +129,13 @@ class ExplorerController(
 
     fun goBack() { back.removeLastOrNull()?.let { forward.addLast(currentPath); go(it) } }
     fun goForward() { forward.removeLastOrNull()?.let { back.addLast(currentPath); go(it) } }
-    fun goUp() { if (canUp) parentOf(currentPath)?.let { navigate(it) } }
+    fun goUp() {
+        when {
+            !canUp -> Unit
+            isVolumeRoot(currentPath) -> navigate(THIS_DEVICE)
+            else -> parentOf(currentPath)?.let { navigate(it) }
+        }
+    }
     fun refresh() { refreshTick++ }
 
     fun toggleSelect(path: String) {
@@ -168,12 +188,14 @@ class ExplorerController(
 
     fun clearSelection() { selection = emptySet() }
 
-    /** Breadcrumb paths from [rootPath] to [currentPath]. */
+    /** Breadcrumb paths from the containing volume's root to [currentPath] (empty on the "This device" page). */
     fun crumbPaths(): List<String> {
-        val result = mutableListOf(rootPath)
-        val rest = currentPath.removePrefix(rootPath).trim('/')
+        if (currentPath == THIS_DEVICE) return emptyList()
+        val root = volumeFor(currentPath)?.path ?: rootPath
+        val result = mutableListOf(root)
+        val rest = currentPath.removePrefix(root).trim('/')
         if (rest.isNotEmpty()) {
-            var acc = rootPath.trimEnd('/')
+            var acc = root.trimEnd('/')
             rest.split('/').forEach { part -> acc = "$acc/$part"; result += acc }
         }
         return result
@@ -182,6 +204,11 @@ class ExplorerController(
     /** Blocking; call from an IO dispatcher. */
     fun load() {
         val path = currentPath
+        if (path == THIS_DEVICE) {
+            items = volumes.map { StorageItem(it.path, it.label.ifEmpty { it.path }, true, 0, 0, false) }
+            error = null
+            return
+        }
         try {
             val listed = Sorting.sort(provider.list(path), sort)
             items = listed

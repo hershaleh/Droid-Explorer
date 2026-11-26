@@ -1,6 +1,15 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,14 +38,17 @@ fun ExplorerScreen(
     grouped: Boolean = true,
     emptyText: String? = null,
     interactive: Boolean = true,
+    nav: NavPaneModel? = null,
 ) {
     val c = FluentTheme.colors
+    var navOpen by remember { mutableStateOf(false) }
     BoxWithConstraints(modifier.fillMaxSize().background(c.windowBackground)) {
         val layout = when {
             maxWidth >= 840.dp -> ExplorerLayout.Wide
             maxWidth >= 600.dp -> ExplorerLayout.Medium
             else -> ExplorerLayout.Narrow
         }
+        val toolbarActions = if (nav != null && layout != ExplorerLayout.Wide) actions.copy(onMenu = { navOpen = true }) else actions
         Column(Modifier.fillMaxSize()) {
             ExplorerTabStrip(titles = listOf(title ?: stringResource(R.string.nav_downloads)), selectedIndex = 0)
             Column(
@@ -46,7 +58,7 @@ fun ExplorerScreen(
                     .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                     .background(c.layer),
             ) {
-                ExplorerToolbar(showSearchBox = layout != ExplorerLayout.Narrow, actions = actions, crumbs = crumbs)
+                ExplorerToolbar(showSearchBox = layout != ExplorerLayout.Narrow, actions = toolbarActions, crumbs = crumbs)
                 ExplorerCommandBar(
                     hasSelection = items.any { it.selected },
                     compact = layout == ExplorerLayout.Narrow,
@@ -55,11 +67,23 @@ fun ExplorerScreen(
                     interactive = interactive,
                 )
                 Row(Modifier.weight(1f)) {
-                    if (layout == ExplorerLayout.Wide) ExplorerNavPane()
+                    if (layout == ExplorerLayout.Wide) ExplorerNavPane(model = nav)
                     ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, grouped, emptyText)
                 }
                 ExplorerStatusBar(items)
             }
+        }
+        if (navOpen && nav != null && layout != ExplorerLayout.Wide) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { navOpen = false },
+            )
+            ExplorerNavPane(
+                modifier = Modifier.align(Alignment.CenterStart),
+                model = nav.copy(onNavigate = { navOpen = false; nav.onNavigate(it) }),
+            )
         }
     }
 }

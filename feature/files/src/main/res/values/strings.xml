@@ -71,4 +71,7 @@
     <string name="dlg_delete_title">מחיקת פריטים</string>
     <string name="dlg_delete_body">%1$d פריטים יימחקו לצמיתות. אין עדיין סל מיחזור, ולא ניתן יהיה לשחזר אותם.</string>
     <string name="dlg_error_title">הפעולה נכשלה</string>
+    <string name="menu">תפריט ניווט</string>
+    <string name="address_edit">עריכת נתיב</string>
+    <string name="path_not_found">הנתיב לא נמצא או שאין גישה אליו</string>
 </resources>

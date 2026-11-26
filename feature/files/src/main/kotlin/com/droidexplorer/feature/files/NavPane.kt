@@ -1,6 +1,7 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ private fun NavTreeItem(
     depth: Int = 0,
     expanded: Boolean? = null,
     selected: Boolean = false,
+    onClick: (() -> Unit)? = null,
 ) {
     val c = FluentTheme.colors
     Box(
@@ -44,6 +46,7 @@ private fun NavTreeItem(
             .padding(horizontal = 4.dp, vertical = 1.dp)
             .height(32.dp)
             .clip(FluentShapes.control)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .background(if (selected) c.subtleFillSecondary else Color.Transparent, FluentShapes.control),
     ) {
         if (selected) {
@@ -93,9 +96,72 @@ private fun NavDivider() {
     )
 }
 
-/** Navigation pane on the Mica background: Home, Quick access tree, This device, Cloud and Network. */
+/** A Quick access shortcut shown in the live navigation pane. */
+data class QuickEntry(val label: String, val icon: FluentIcons, val path: String)
+
+/** What the live navigation pane shows and does. Only working destinations are listed. */
+data class NavPaneModel(
+    val quick: List<QuickEntry>,
+    val volumes: List<VolumeInfo>,
+    val currentPath: String,
+    val volumeFor: (String) -> VolumeInfo?,
+    val onNavigate: (String) -> Unit,
+)
+
 @Composable
-fun ExplorerNavPane(modifier: Modifier = Modifier) {
+private fun LiveNavPane(model: NavPaneModel, modifier: Modifier) {
+    val c = FluentTheme.colors
+    val internal = stringResource(R.string.addr_internal)
+    Column(
+        modifier = modifier
+            .width(260.dp)
+            .fillMaxHeight()
+            .background(c.windowBackground)
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 4.dp),
+    ) {
+        NavTreeItem(
+            stringResource(R.string.nav_quick_access),
+            { FluentIcon(FluentIcons.Home, tint = c.accent) },
+            expanded = true,
+        )
+        model.quick.forEach { q ->
+            NavTreeItem(
+                q.label,
+                { FluentIcon(q.icon) },
+                depth = 1,
+                selected = model.currentPath == q.path,
+                onClick = { model.onNavigate(q.path) },
+            )
+        }
+        NavDivider()
+        NavTreeItem(
+            stringResource(R.string.nav_this_device),
+            { FluentIcon(FluentIcons.Network) },
+            expanded = true,
+            selected = model.currentPath == THIS_DEVICE,
+            onClick = { model.onNavigate(THIS_DEVICE) },
+        )
+        val activeVolume = model.volumeFor(model.currentPath)
+        model.volumes.forEach { v ->
+            NavTreeItem(
+                v.label.ifEmpty { internal },
+                { FluentIcon(FluentIcons.Drive) },
+                depth = 1,
+                selected = activeVolume == v && model.quick.none { it.path == model.currentPath },
+                onClick = { model.onNavigate(v.path) },
+            )
+        }
+    }
+}
+
+/** Navigation pane on the Mica background. With a [model] it is live; without one it is a static preview. */
+@Composable
+fun ExplorerNavPane(modifier: Modifier = Modifier, model: NavPaneModel? = null) {
+    if (model != null) {
+        LiveNavPane(model, modifier)
+        return
+    }
     val c = FluentTheme.colors
     Column(
         modifier = modifier

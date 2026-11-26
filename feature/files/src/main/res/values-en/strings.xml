@@ -71,4 +71,7 @@
     <string name="dlg_delete_title">Delete items</string>
     <string name="dlg_delete_body">%1$d items will be deleted permanently. There is no recycle bin yet, so they cannot be restored.</string>
     <string name="dlg_error_title">The operation failed</string>
+    <string name="menu">Navigation menu</string>
+    <string name="address_edit">Edit path</string>
+    <string name="path_not_found">The path was not found or can\'t be accessed.</string>
 </resources>

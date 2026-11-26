@@ -27,7 +27,9 @@ class ExplorerControllerTest {
 
     @Test fun navigationHistoryAndUp() {
         val c = controller()
-        assertFalse(c.canBack); assertFalse(c.canUp)
+        assertFalse(c.canBack)
+        // From a volume root, Up leads to the "This device" page, as C:\\ leads to This PC.
+        assertTrue(c.canUp)
         c.navigate(File(root, "a").path)
         c.navigate(File(root, "a/b").path)
         assertTrue(c.canBack && c.canUp)
@@ -38,7 +40,11 @@ class ExplorerControllerTest {
         assertEquals(File(root, "a/b").path, c.currentPath)
         c.goUp(); c.goUp()
         assertEquals(root.path, c.currentPath)
+        c.goUp()
+        assertEquals(THIS_DEVICE, c.currentPath)
         assertFalse(c.canUp)
+        c.load()
+        assertEquals(1, c.items.size)
     }
 
     @Test fun newNavigationClearsForwardAndSelection() {

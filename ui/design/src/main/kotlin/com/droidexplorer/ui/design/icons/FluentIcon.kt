@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 enum class FluentIcons(val mirrorsInRtl: Boolean = false) {
     Back(true), Forward(true), Up, Refresh, Search, ChevronRight(true), ChevronDown, Close, Add,
     Cut, Copy, Paste, Rename, Share, Delete, Sort, View, List, More,
-    Home, Download, Document, Picture, Music, Video, Drive, Cloud, Network, Settings,
+    Home, Download, Document, Picture, Music, Video, Drive, Cloud, Network, Settings, Menu,
 }
 
 private class Pen(val scope: DrawScope, val color: Color, val width: Float) {
@@ -177,6 +177,7 @@ private fun drawIcon(scope: DrawScope, tint: Color, icon: FluentIcons, sw: Float
             close()
         }
         FluentIcons.Network -> { p.rrect(3f, 4f, 14f, 9f, 1.8f); p.line(8f, 16.5f, 12f, 16.5f); p.line(10f, 13f, 10f, 16.5f) }
+        FluentIcons.Menu -> { p.line(3.5f, 5.5f, 16.5f, 5.5f); p.line(3.5f, 10f, 16.5f, 10f); p.line(3.5f, 14.5f, 16.5f, 14.5f) }
         FluentIcons.Settings -> {
             p.circle(10f, 10f, 2.6f)
             for (i in 0 until 8) {

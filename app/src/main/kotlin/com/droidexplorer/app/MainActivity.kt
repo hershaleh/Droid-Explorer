@@ -37,6 +37,7 @@ import java.io.File
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.droidexplorer.feature.files.LiveExplorerScreen
+import com.droidexplorer.feature.files.VolumeInfo
 import com.droidexplorer.storage.local.LocalStorageProvider
 import com.droidexplorer.ui.design.DroidExplorerTheme
 import com.droidexplorer.ui.design.FluentTheme
@@ -51,9 +52,11 @@ class MainActivity : ComponentActivity() {
                 StorageGate {
                     val provider = remember { LocalStorageProvider() }
                     val context = LocalContext.current
+                    val volumes = remember { context.storageVolumes() }
                     LiveExplorerScreen(
                         provider = provider,
-                        rootPath = Environment.getExternalStorageDirectory().path,
+                        rootPath = volumes.first().path,
+                        volumes = volumes,
                         onOpenFile = { context.openFile(it) },
                         onShare = { context.shareFiles(it) },
                     )
@@ -61,6 +64,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+/** Internal storage first, then SD cards and USB drives that are currently mounted. */
+private fun android.content.Context.storageVolumes(): List<VolumeInfo> {
+    val primary = Environment.getExternalStorageDirectory().path
+    val sm = getSystemService(android.os.storage.StorageManager::class.java)
+    val roots = getExternalFilesDirs(null).filterNotNull()
+        .map { it.path.substringBefore("/Android/data") }
+        .filter { it != primary && File(it).isDirectory }
+        .distinct()
+    val result = mutableListOf(VolumeInfo(getString(R.string.volume_internal), primary))
+    roots.forEach { root ->
+        val vol = try { sm?.getStorageVolume(File(root)) } catch (_: Exception) { null }
+        result += VolumeInfo(vol?.getDescription(this) ?: File(root).name, root, removable = true)
+    }
+    return result
 }
 
 private fun android.content.Context.uriFor(path: String): Uri =

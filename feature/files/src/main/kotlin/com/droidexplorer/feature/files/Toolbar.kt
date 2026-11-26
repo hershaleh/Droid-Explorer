@@ -3,6 +3,17 @@ package com.droidexplorer.feature.files
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,13 +50,15 @@ import com.droidexplorer.ui.design.icons.FluentIcon
 import com.droidexplorer.ui.design.icons.FluentIcons
 
 @Composable
-private fun ToolbarIconButton(icon: FluentIcons, enabled: Boolean = true, onClick: () -> Unit = {}) {
+private fun ToolbarIconButton(icon: FluentIcons, enabled: Boolean = true, label: String? = null, onClick: () -> Unit = {}) {
     FluentButton(
         onClick = onClick,
         style = ButtonStyle.Subtle,
         enabled = enabled,
         contentPadding = PaddingValues(8.dp),
-        modifier = Modifier.size(32.dp),
+        modifier = Modifier.size(32.dp).then(
+            if (label != null) Modifier.semantics { contentDescription = label } else Modifier,
+        ),
     ) {
         FluentIcon(icon, size = 16.dp)
     }
@@ -66,12 +79,13 @@ fun ExplorerToolbar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        ToolbarIconButton(FluentIcons.Back, actions.canBack, actions.onBack)
-        ToolbarIconButton(FluentIcons.Forward, actions.canForward, actions.onForward)
-        ToolbarIconButton(FluentIcons.Up, actions.canUp, actions.onUp)
-        ToolbarIconButton(FluentIcons.Refresh, true, actions.onRefresh)
+        actions.onMenu?.let { ToolbarIconButton(FluentIcons.Menu, true, stringResource(R.string.menu), it) }
+        ToolbarIconButton(FluentIcons.Back, actions.canBack, stringResource(R.string.back), actions.onBack)
+        ToolbarIconButton(FluentIcons.Forward, actions.canForward, stringResource(R.string.forward), actions.onForward)
+        ToolbarIconButton(FluentIcons.Up, actions.canUp, stringResource(R.string.up), actions.onUp)
+        ToolbarIconButton(FluentIcons.Refresh, true, stringResource(R.string.refresh), actions.onRefresh)
         Spacer(Modifier.width(4.dp))
-        AddressBar(Modifier.weight(1f), crumbs, actions.onCrumb)
+        AddressBar(Modifier.weight(1f), crumbs, actions.onCrumb, actions.editablePath, actions.onPathSubmit)
         Spacer(Modifier.width(6.dp))
         if (showSearchBox) {
             var query by remember { mutableStateOf("") }
@@ -83,27 +97,60 @@ fun ExplorerToolbar(
                 trailing = { FluentIcon(FluentIcons.Search, tint = FluentTheme.colors.textSecondary) },
             )
         } else {
-            ToolbarIconButton(FluentIcons.Search)
+            ToolbarIconButton(FluentIcons.Search, true, stringResource(R.string.search))
         }
     }
 }
 
-/** Windows 11 address bar: folder glyph, breadcrumb segments separated by chevrons, history chevron. */
+/**
+ * Windows 11 address bar: folder glyph, breadcrumb segments separated by chevrons, history chevron.
+ * Tapping the chevron (or the empty space) switches to a text box with the full path, as in Windows.
+ */
 @Composable
-fun AddressBar(modifier: Modifier = Modifier, crumbs: List<String>? = null, onCrumb: (Int) -> Unit = {}) {
+fun AddressBar(
+    modifier: Modifier = Modifier,
+    crumbs: List<String>? = null,
+    onCrumb: (Int) -> Unit = {},
+    editablePath: String? = null,
+    onPathSubmit: (String) -> Unit = {},
+) {
     val c = FluentTheme.colors
     val segments = crumbs ?: listOf(
         stringResource(R.string.addr_this_device),
         stringResource(R.string.addr_internal),
         stringResource(R.string.nav_downloads),
     )
+    var editing by remember { mutableStateOf(false) }
+    val canEdit = editablePath != null
+    if (editing && editablePath != null) {
+        var text by remember(editablePath) { mutableStateOf(editablePath) }
+        val focus = remember { FocusRequester() }
+        var hadFocus by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { focus.requestFocus() }
+        FluentTextBox(
+            value = text,
+            onValueChange = { text = it },
+            modifier = modifier
+                .focusRequester(focus)
+                .onFocusChanged { st ->
+                    if (st.isFocused) hadFocus = true else if (hadFocus) editing = false
+                }
+                .testTag("address-input"),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go, keyboardType = KeyboardType.Uri),
+            keyboardActions = KeyboardActions(onGo = { editing = false; onPathSubmit(text.trim()) }),
+            leading = { FolderGlyph() },
+        )
+        return
+    }
     Row(
         modifier = modifier
             .height(32.dp)
             .clip(FluentShapes.control)
             .background(c.controlFillInput, FluentShapes.control)
             .border(1.dp, c.controlStroke, FluentShapes.control)
-            .padding(horizontal = 8.dp),
+            .then(if (canEdit) Modifier.clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { editing = true } else Modifier)
+            .padding(horizontal = 8.dp)
+            .testTag("address-bar"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         FolderGlyph()
@@ -120,13 +167,24 @@ fun AddressBar(modifier: Modifier = Modifier, crumbs: List<String>? = null, onCr
                 Box(
                     Modifier.clip(FluentShapes.control)
                         .clickable { onCrumb(i) }
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .testTag("crumb-$i"),
                 ) {
                     Text(label, style = FluentTheme.typography.body, color = c.textPrimary, maxLines = 1)
                 }
             }
         }
-        FluentIcon(FluentIcons.ChevronDown, tint = c.textSecondary, size = 10.dp)
+        val editLabel = stringResource(R.string.address_edit)
+        Box(
+            Modifier
+                .size(width = 28.dp, height = 32.dp)
+                .clickable(enabled = canEdit) { editing = true }
+                .semantics { contentDescription = editLabel }
+                .testTag("address-edit"),
+            contentAlignment = Alignment.Center,
+        ) {
+            FluentIcon(FluentIcons.ChevronDown, tint = c.textSecondary, size = 10.dp)
+        }
     }
 }
 
@@ -142,8 +200,8 @@ private fun CommandDivider() {
 }
 
 @Composable
-private fun CommandIcon(icon: FluentIcons, enabled: Boolean = true, onClick: () -> Unit = {}) {
-    ToolbarIconButton(icon, enabled, onClick)
+private fun CommandIcon(icon: FluentIcons, enabled: Boolean = true, label: String? = null, onClick: () -> Unit = {}) {
+    ToolbarIconButton(icon, enabled, label, onClick)
 }
 
 @Composable
@@ -237,16 +295,16 @@ fun ExplorerCommandBar(
     ) {
         CommandLabeled(FluentIcons.Add, stringResource(R.string.cmd_new), showLabel = true, chevron = false, enabled = interactive, onClick = actions.onNewFolder)
         CommandDivider()
-        CommandIcon(FluentIcons.Cut, hasSelection, actions.onCut)
-        CommandIcon(FluentIcons.Copy, hasSelection, actions.onCopy)
-        CommandIcon(FluentIcons.Paste, actions.canPaste, actions.onPaste)
-        CommandIcon(FluentIcons.Rename, singleSelection && hasSelection, actions.onRename)
-        CommandIcon(FluentIcons.Share, hasSelection, actions.onShare)
-        CommandIcon(FluentIcons.Delete, hasSelection, actions.onDelete)
+        CommandIcon(FluentIcons.Cut, hasSelection, stringResource(R.string.cmd_cut), actions.onCut)
+        CommandIcon(FluentIcons.Copy, hasSelection, stringResource(R.string.cmd_copy), actions.onCopy)
+        CommandIcon(FluentIcons.Paste, actions.canPaste, stringResource(R.string.cmd_paste), actions.onPaste)
+        CommandIcon(FluentIcons.Rename, singleSelection && hasSelection, stringResource(R.string.cmd_rename), actions.onRename)
+        CommandIcon(FluentIcons.Share, hasSelection, stringResource(R.string.cmd_share), actions.onShare)
+        CommandIcon(FluentIcons.Delete, hasSelection, stringResource(R.string.cmd_delete), actions.onDelete)
         CommandDivider()
         SortMenu(actions, showLabel = !compact)
         CommandLabeled(FluentIcons.View, stringResource(R.string.cmd_view), showLabel = !compact, chevron = true, enabled = false)
         CommandDivider()
-        CommandIcon(FluentIcons.More, enabled = false)
+        CommandIcon(FluentIcons.More, false, stringResource(R.string.cmd_more))
     }
 }

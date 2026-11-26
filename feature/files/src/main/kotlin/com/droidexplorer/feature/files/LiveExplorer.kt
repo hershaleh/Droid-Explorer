@@ -17,6 +17,7 @@ import com.droidexplorer.storage.api.StorageProvider
 import com.droidexplorer.ui.design.FluentTheme
 import com.droidexplorer.ui.design.controls.FluentContentDialog
 import com.droidexplorer.ui.design.controls.FluentTextBox
+import com.droidexplorer.ui.design.icons.FluentIcons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,10 +37,11 @@ private sealed interface Dialog {
 fun LiveExplorerScreen(
     provider: StorageProvider,
     rootPath: String,
+    volumes: List<VolumeInfo> = listOf(VolumeInfo("", rootPath)),
     onOpenFile: (String) -> Unit = {},
     onShare: (List<String>) -> Unit = {},
 ) {
-    val controller = remember(provider, rootPath) { ExplorerController(provider, rootPath) }
+    val controller = remember(provider, rootPath, volumes) { ExplorerController(provider, rootPath, volumes = volumes) }
     val scope = rememberCoroutineScope()
     var dialog by remember { mutableStateOf<Dialog?>(null) }
 
@@ -50,9 +52,13 @@ fun LiveExplorerScreen(
     BackHandler(enabled = controller.selection.isEmpty() && controller.canBack) { controller.goBack() }
 
     // Grouping boundaries and rows are computed once per listing, not on every recomposition.
-    val baseRows = remember(controller.items) {
+    val atDevice = controller.currentPath == THIS_DEVICE
+    val baseRows = remember(controller.items, atDevice) {
         val bounds = ItemMapping.GroupBounds(System.currentTimeMillis())
-        controller.items.map { ItemMapping.toRow(it, bounds, selected = false) }
+        controller.items.map {
+            val row = ItemMapping.toRow(it, bounds, selected = false)
+            if (atDevice) row.copy(modified = "") else row
+        }
     }
     val selection = controller.selection
     val rows = remember(baseRows, selection) {
@@ -61,10 +67,19 @@ fun LiveExplorerScreen(
     val internal = stringResource(R.string.addr_internal)
     val device = stringResource(R.string.addr_this_device)
     val paths = remember(controller.currentPath) { controller.crumbPaths() }
-    val crumbs = remember(paths, internal, device) {
-        listOf(device) + paths.mapIndexed { i, p -> if (i == 0) internal else p.substringAfterLast('/') }
+    val volumeLabel = controller.volumeFor(controller.currentPath)?.label?.ifEmpty { internal } ?: internal
+    val crumbs = remember(paths, volumeLabel, device) {
+        listOf(device) + paths.mapIndexed { i, p -> if (i == 0) volumeLabel else p.substringAfterLast('/') }
     }
-    val isDownloads = controller.currentPath.substringAfterLast('/') == "Download"
+    val isDownloads = !atDevice && controller.currentPath.substringAfterLast('/') == "Download"
+    val notFound = stringResource(R.string.path_not_found)
+    val quick = listOf(
+        QuickEntry(stringResource(R.string.nav_downloads), FluentIcons.Download, "Download"),
+        QuickEntry(stringResource(R.string.nav_documents), FluentIcons.Document, "Documents"),
+        QuickEntry(stringResource(R.string.nav_pictures), FluentIcons.Picture, "Pictures"),
+        QuickEntry(stringResource(R.string.nav_music), FluentIcons.Music, "Music"),
+        QuickEntry(stringResource(R.string.nav_videos), FluentIcons.Video, "Movies"),
+    ).map { it.copy(path = rootPath.trimEnd('/') + "/" + it.path) }
     val newFolderName = stringResource(R.string.new_folder_name)
 
     fun runOp(op: () -> String?) {
@@ -93,7 +108,17 @@ fun LiveExplorerScreen(
         },
         onToggleSelect = { controller.toggleSelect(it.path) },
         // index 0 is the "This device" crumb, which is not a folder.
-        onCrumb = { i -> if (i >= 1) controller.navigate(paths[i - 1]) },
+        onCrumb = { i ->
+            if (i == 0) controller.navigate(THIS_DEVICE) else paths.getOrNull(i - 1)?.let(controller::navigate)
+        },
+        editablePath = if (atDevice) null else controller.currentPath,
+        onPathSubmit = { text ->
+            scope.launch {
+                val target = text.trimEnd('/').ifEmpty { "/" }
+                val ok = withContext(Dispatchers.IO) { runCatching { provider.list(target) }.isSuccess }
+                if (ok) controller.navigate(target) else dialog = Dialog.Error(notFound)
+            }
+        },
         canPaste = controller.clipboard.isNotEmpty(),
         sortKey = controller.sort.key,
         sortAscending = controller.sort.ascending,
@@ -112,6 +137,13 @@ fun LiveExplorerScreen(
         crumbs = crumbs,
         title = crumbs.last(),
         grouped = isDownloads,
+        nav = NavPaneModel(
+            quick = quick,
+            volumes = controller.volumes,
+            currentPath = controller.currentPath,
+            volumeFor = controller::volumeFor,
+            onNavigate = controller::navigate,
+        ),
         emptyText = controller.error?.let { stringResource(R.string.folder_error) }
             ?: stringResource(R.string.folder_empty),
     )
