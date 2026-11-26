@@ -208,10 +208,10 @@ class ExplorerController(
 
     fun selectAll() { selection = items.map { it.path }.toSet() }
     fun invertSelection() { selection = items.map { it.path }.toSet() - selection }
-    fun setViewMode(mode: ViewMode) { viewMode = mode }
-    fun setGroupBy(mode: GroupBy) { groupBy = mode }
+    fun chooseViewMode(mode: ViewMode) { viewMode = mode }
+    fun chooseGroupBy(mode: GroupBy) { groupBy = mode }
     fun changeShowHidden(value: Boolean) { showHidden = value }
-    fun setQuery(text: String) { query = text }
+    fun updateQuery(text: String) { query = text }
 
     /** Breadcrumb paths from the containing volume's root to [currentPath] (empty on the "This device" page). */
     fun crumbPaths(): List<String> {
