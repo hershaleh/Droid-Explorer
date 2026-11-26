@@ -40,5 +40,7 @@ dependencies {
     implementation(project(":core:capabilities"))
     implementation(project(":ui:design"))
     implementation(project(":feature:files"))
+    implementation(project(":storage:api"))
+    implementation(project(":storage:local"))
     implementation(libs.androidx.activity.compose)
 }
