@@ -89,13 +89,16 @@ private fun mimeOf(path: String): String =
     MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(path).extension.lowercase()) ?: "*/*"
 
 private fun android.content.Context.openFile(path: String) {
-    val intent = Intent(Intent.ACTION_VIEW)
-        .setDataAndType(uriFor(path), mimeOf(path))
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
+        val intent = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uriFor(path), mimeOf(path))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
-    } catch (_: Exception) {
-        android.widget.Toast.makeText(this, getString(R.string.no_app_to_open), android.widget.Toast.LENGTH_SHORT).show()
+    } catch (_: android.content.ActivityNotFoundException) {
+        android.widget.Toast.makeText(this, getString(R.string.no_app_to_open), android.widget.Toast.LENGTH_LONG).show()
+    } catch (e: Exception) {
+        // Show the real reason instead of failing silently.
+        android.widget.Toast.makeText(this, "${getString(R.string.open_failed)}: ${e.javaClass.simpleName} ${e.message}", android.widget.Toast.LENGTH_LONG).show()
     }
 }
 
