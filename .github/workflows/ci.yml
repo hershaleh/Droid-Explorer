@@ -70,6 +70,10 @@ jobs:
           {
             echo "status=${{ job.status }}"
             echo "sha=${GITHUB_SHA}"
+            echo "----- test summary (suite tests failures errors skipped) -----"
+            for f in $(find . -path "*/build/test-results/*" -name "TEST-*.xml"); do
+              grep -m1 -o '<testsuite name="[^"]*" tests="[0-9]*" skipped="[0-9]*" failures="[0-9]*" errors="[0-9]*"' "$f" || true
+            done
             echo "----- last 400 lines of build log -----"
             tail -n 400 build.log 2>/dev/null || true
             echo "----- screenshots step: ${{ steps.shots.outcome }} -----"
