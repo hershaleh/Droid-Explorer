@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,8 +99,11 @@ fun AddressBar(modifier: Modifier = Modifier) {
     ) {
         FolderGlyph()
         Spacer(Modifier.width(4.dp))
+        val crumbScroll = rememberScrollState()
+        // Keep the current folder (the last crumb) visible, as Windows does when the path is long.
+        LaunchedEffect(crumbScroll.maxValue) { crumbScroll.scrollTo(crumbScroll.maxValue) }
         Row(
-            Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+            Modifier.weight(1f).horizontalScroll(crumbScroll),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             segments.forEachIndexed { i, label ->
