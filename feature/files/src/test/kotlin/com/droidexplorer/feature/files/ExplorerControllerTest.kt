@@ -90,4 +90,42 @@ class ExplorerControllerTest {
         assertEquals(DateGroup.EarlierThisYear, ItemMapping.groupOf(at(2026, Calendar.MARCH, 1), now))
         assertEquals(DateGroup.LongAgo, ItemMapping.groupOf(at(2024, Calendar.MARCH, 1), now))
     }
+
+    @Test fun cutPasteMovesAndCopyPasteCopies() {
+        val c = controller()
+        c.load()
+        val f = File(root, "a/f.txt").path
+        c.navigate(File(root, "a").path); c.load()
+        c.toggleSelect(f); c.copySelection()
+        c.navigate(File(root, "a/b").path)
+        assertEquals(null, c.paste())
+        assertTrue(File(root, "a/b/f.txt").exists() && File(root, "a/f.txt").exists())
+        c.navigate(File(root, "a").path)
+        c.toggleSelect(f); c.cutSelection()
+        c.navigate(root.path)
+        assertEquals(null, c.paste())
+        assertTrue(File(root, "f.txt").exists() && !File(root, "a/f.txt").exists())
+        assertTrue(c.clipboard.isEmpty())
+    }
+
+    @Test fun createRenameDeleteAndErrors() {
+        val c = controller()
+        assertEquals(null, c.createFolder("n"))
+        assertTrue(c.createFolder("n") != null)
+        c.load()
+        c.toggleSelect(File(root, "n").path)
+        assertEquals(null, c.renameSelected("m"))
+        assertTrue(File(root, "m").isDirectory)
+        c.clearSelection(); c.toggleSelect(File(root, "m").path)
+        assertEquals(null, c.deleteSelected())
+        assertFalse(File(root, "m").exists())
+        assertTrue(c.renameSelected("z") != null)
+    }
+
+    @Test fun uniqueNameLikeWindows() {
+        val c = controller()
+        c.load()
+        assertEquals("a (2)", c.uniqueName("a"))
+        assertEquals("new", c.uniqueName("new"))
+    }
 }
