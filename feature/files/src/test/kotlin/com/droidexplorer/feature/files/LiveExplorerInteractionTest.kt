@@ -3,6 +3,7 @@ package com.droidexplorer.feature.files
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -58,7 +59,7 @@ class LiveExplorerInteractionTest {
 
     private fun openSub() {
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 0 }
-        rule.onNodeWithText("Sub").performClick()
+        rule.onAllNodesWithText("Sub").onLast().performClick()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
     }
 
@@ -74,7 +75,7 @@ class LiveExplorerInteractionTest {
 
     @Test fun clickingAParentCrumbNavigatesThere() {
         openSub()
-        rule.onNodeWithText("inner").performClick()
+        rule.onAllNodesWithText("inner").onLast().performClick()
         rule.waitUntil(5000) { rule.onNodeWithTag("crumb-3").isDisplayedSafe() }
         // crumbs: This device > Internal > Sub > inner. Go back to "Sub".
         rule.onNodeWithTag("crumb-2").performClick()
@@ -113,7 +114,7 @@ class LiveExplorerInteractionTest {
         rule.onNodeWithTag("nav-toggle-" + File(root, "Sub").path).performClick()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("inner") > 0 }
         // Clicking a tree folder navigates to it.
-        rule.onNodeWithText("inner").performClick()
+        rule.onAllNodesWithText("inner").onLast().performClick()
         rule.waitUntil(5000) { rule.onNodeWithTag("crumb-3").isDisplayedSafe() }
     }
 
@@ -157,7 +158,7 @@ class LiveExplorerInteractionTest {
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("a.txt") > 0 }
         rule.onNodeWithText("a.txt").performTouchInput { longClick() }
         rule.onNodeWithContentDescription("Copy").performClick()
-        rule.onNodeWithText("Sub").performClick()
+        rule.onAllNodesWithText("Sub").onLast().performClick()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
         rule.onNodeWithContentDescription("Paste").performClick()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Replace the file in the destination") > 0 }
