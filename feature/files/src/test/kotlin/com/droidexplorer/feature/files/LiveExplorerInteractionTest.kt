@@ -143,6 +143,7 @@ class LiveExplorerInteractionTest {
     @Test fun conflictDialogReplaceOverwrites() {
         File(root, "a.txt").writeText("new")
         File(root, "Sub/a.txt").writeText("old")
+        rule.onNodeWithContentDescription("Refresh").performClick()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("a.txt") > 0 }
         rule.onNodeWithText("a.txt").performTouchInput { longClick() }
         rule.onNodeWithContentDescription("Copy").performClick()
