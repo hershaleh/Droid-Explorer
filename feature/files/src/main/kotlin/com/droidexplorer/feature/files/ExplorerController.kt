@@ -28,44 +28,53 @@ object ItemMapping {
         }
     }
 
-    /** Windows File Explorer date groups, relative to [now]. Weeks start on [firstDayOfWeek]. */
-    fun groupOf(modifiedMillis: Long, now: Long, firstDayOfWeek: Int = Calendar.SUNDAY): DateGroup {
-        fun startOfDay(t: Long) = Calendar.getInstance().apply {
+    /** Day/week/month boundaries computed once per listing, so grouping thousands of files stays cheap. */
+    class GroupBounds(now: Long, firstDayOfWeek: Int = Calendar.SUNDAY) {
+        private fun startOfDay(t: Long) = Calendar.getInstance().apply {
             timeInMillis = t
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }
-        val today = startOfDay(now)
-        val yesterday = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
-        val weekStart = (today.clone() as Calendar).apply {
-            firstDayOfWeek.let { f -> this.firstDayOfWeek = f }
+
+        private val today = startOfDay(now)
+        private val yesterday = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }.timeInMillis
+        private val weekStart = (today.clone() as Calendar).apply {
             while (get(Calendar.DAY_OF_WEEK) != firstDayOfWeek) add(Calendar.DAY_OF_YEAR, -1)
         }
-        val lastWeekStart = (weekStart.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -7) }
-        val monthStart = (today.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }
-        val lastMonthStart = (monthStart.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
-        val yearStart = (today.clone() as Calendar).apply { set(Calendar.DAY_OF_YEAR, 1) }
-        val m = modifiedMillis
-        return when {
-            m >= today.timeInMillis -> DateGroup.Today
-            m >= yesterday.timeInMillis -> DateGroup.Yesterday
-            m >= weekStart.timeInMillis -> DateGroup.EarlierThisWeek
-            m >= lastWeekStart.timeInMillis -> DateGroup.LastWeek
-            m >= monthStart.timeInMillis -> DateGroup.EarlierThisMonth
-            m >= lastMonthStart.timeInMillis -> DateGroup.LastMonth
-            m >= yearStart.timeInMillis -> DateGroup.EarlierThisYear
+        private val lastWeekStart = (weekStart.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -7) }.timeInMillis
+        private val monthStart = (today.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }
+        private val lastMonthStart = (monthStart.clone() as Calendar).apply { add(Calendar.MONTH, -1) }.timeInMillis
+        private val yearStart = (today.clone() as Calendar).apply { set(Calendar.DAY_OF_YEAR, 1) }.timeInMillis
+        private val todayMs = today.timeInMillis
+        private val weekMs = weekStart.timeInMillis
+        private val monthMs = monthStart.timeInMillis
+
+        fun groupOf(m: Long): DateGroup = when {
+            m >= todayMs -> DateGroup.Today
+            m >= yesterday -> DateGroup.Yesterday
+            m >= weekMs -> DateGroup.EarlierThisWeek
+            m >= lastWeekStart -> DateGroup.LastWeek
+            m >= monthMs -> DateGroup.EarlierThisMonth
+            m >= lastMonthStart -> DateGroup.LastMonth
+            m >= yearStart -> DateGroup.EarlierThisYear
             else -> DateGroup.LongAgo
         }
     }
 
+    fun groupOf(modifiedMillis: Long, now: Long, firstDayOfWeek: Int = Calendar.SUNDAY): DateGroup =
+        GroupBounds(now, firstDayOfWeek).groupOf(modifiedMillis)
+
     fun format(modifiedMillis: Long): String =
         SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US).format(Date(modifiedMillis))
 
-    fun toRow(item: StorageItem, now: Long, selected: Boolean): ExplorerItem = ExplorerItem(
+    fun toRow(item: StorageItem, now: Long, selected: Boolean): ExplorerItem =
+        toRow(item, GroupBounds(now), selected)
+
+    fun toRow(item: StorageItem, bounds: GroupBounds, selected: Boolean): ExplorerItem = ExplorerItem(
         name = item.name,
         kind = kindOf(item),
         modified = format(item.modifiedMillis),
         sizeKb = if (item.isDirectory) null else (item.sizeBytes + 1023) / 1024,
-        group = groupOf(item.modifiedMillis, now),
+        group = bounds.groupOf(item.modifiedMillis),
         selected = selected,
         path = item.path,
     )
@@ -86,6 +95,9 @@ class ExplorerController(
     var error by mutableStateOf<String?>(null); private set
     var sort by mutableStateOf(SortOrder()); private set
     var refreshTick by mutableStateOf(0); private set
+
+    var clipboard by mutableStateOf<List<String>>(emptyList()); private set
+    var clipboardIsCut by mutableStateOf(false); private set
 
     private val back = ArrayDeque<String>()
     private val forward = ArrayDeque<String>()
@@ -108,6 +120,50 @@ class ExplorerController(
 
     fun toggleSelect(path: String) {
         selection = if (path in selection) selection - path else selection + path
+    }
+
+    fun setSort(order: SortOrder) {
+        sort = order
+        items = Sorting.sort(items, order)
+    }
+
+    fun copySelection() { clipboard = selection.toList(); clipboardIsCut = false }
+    fun cutSelection() { clipboard = selection.toList(); clipboardIsCut = true }
+
+    /** Each operation returns null on success or the error message. Blocking: run off the main thread. */
+    fun paste(): String? = attempt {
+        val target = currentPath
+        clipboard.forEach { src ->
+            if (clipboardIsCut) provider.move(src, target) else provider.copy(src, target)
+        }
+        if (clipboardIsCut) clipboard = emptyList()
+    }
+
+    fun createFolder(name: String): String? = attempt { provider.createFolder(currentPath, name) }
+
+    fun renameSelected(newName: String): String? = attempt {
+        val path = selection.singleOrNull() ?: error("Select exactly one item")
+        provider.rename(path, newName)
+    }
+
+    fun deleteSelected(): String? = attempt {
+        selection.forEach { provider.delete(it) }
+    }
+
+    /** "New folder", then "New folder (2)", "New folder (3)" as Windows does. */
+    fun uniqueName(base: String): String {
+        val taken = items.map { it.name }.toSet()
+        if (base !in taken) return base
+        var n = 2
+        while ("$base ($n)" in taken) n++
+        return "$base ($n)"
+    }
+
+    private fun attempt(block: () -> Unit): String? = try {
+        block()
+        null
+    } catch (e: Exception) {
+        e.message ?: "error"
     }
 
     fun clearSelection() { selection = emptySet() }

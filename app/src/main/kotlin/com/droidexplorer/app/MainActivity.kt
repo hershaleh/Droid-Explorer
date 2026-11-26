@@ -30,7 +30,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.droidexplorer.feature.files.LiveExplorerScreen
@@ -47,11 +50,50 @@ class MainActivity : ComponentActivity() {
             DroidExplorerTheme {
                 StorageGate {
                     val provider = remember { LocalStorageProvider() }
-                    LiveExplorerScreen(provider, Environment.getExternalStorageDirectory().path)
+                    val context = LocalContext.current
+                    LiveExplorerScreen(
+                        provider = provider,
+                        rootPath = Environment.getExternalStorageDirectory().path,
+                        onOpenFile = { context.openFile(it) },
+                        onShare = { context.shareFiles(it) },
+                    )
                 }
             }
         }
     }
+}
+
+private fun android.content.Context.uriFor(path: String): Uri =
+    FileProvider.getUriForFile(this, "$packageName.fileprovider", File(path))
+
+private fun mimeOf(path: String): String =
+    MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(path).extension.lowercase()) ?: "*/*"
+
+private fun android.content.Context.openFile(path: String) {
+    val intent = Intent(Intent.ACTION_VIEW)
+        .setDataAndType(uriFor(path), mimeOf(path))
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        startActivity(intent)
+    } catch (_: Exception) {
+        android.widget.Toast.makeText(this, getString(R.string.no_app_to_open), android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
+private fun android.content.Context.shareFiles(paths: List<String>) {
+    if (paths.isEmpty()) return
+    val files = paths.filter { File(it).isFile }
+    if (files.isEmpty()) {
+        android.widget.Toast.makeText(this, getString(R.string.share_files_only), android.widget.Toast.LENGTH_SHORT).show()
+        return
+    }
+    val intent = if (files.size == 1) {
+        Intent(Intent.ACTION_SEND).setType(mimeOf(files[0])).putExtra(Intent.EXTRA_STREAM, uriFor(files[0]))
+    } else {
+        Intent(Intent.ACTION_SEND_MULTIPLE).setType("*/*")
+            .putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(files.map { uriFor(it) }))
+    }
+    startActivity(Intent.createChooser(intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), null))
 }
 
 private fun hasStorageAccess(context: android.content.Context): Boolean =

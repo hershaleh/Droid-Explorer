@@ -5,4 +5,6 @@
     <string name="perm_title">נדרשת גישה לכל הקבצים</string>
     <string name="perm_body">כדי לנהל את הקבצים במכשיר, האפליקציה צריכה הרשאת גישה לכל הקבצים. האפליקציה לא שולחת קבצים לשום מקום.</string>
     <string name="perm_button">פתיחת ההגדרות</string>
+    <string name="no_app_to_open">לא נמצאה אפליקציה שיכולה לפתוח את הקובץ</string>
+    <string name="share_files_only">ניתן לשתף קבצים בלבד, לא תיקיות</string>
 </resources>

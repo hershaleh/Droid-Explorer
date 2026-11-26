@@ -36,9 +36,9 @@ interface StorageProvider {
 object Sorting {
     private val chunk = Regex("(\\d+)|(\\D+)")
 
-    fun naturalCompare(a: String, b: String): Int {
-        val ca = chunk.findAll(a).map { it.value }.toList()
-        val cb = chunk.findAll(b).map { it.value }.toList()
+    fun naturalKey(name: String): List<String> = chunk.findAll(name).map { it.value }.toList()
+
+    fun compareKeys(ca: List<String>, cb: List<String>): Int {
         for (i in 0 until minOf(ca.size, cb.size)) {
             val x = ca[i]
             val y = cb[i]
@@ -54,15 +54,20 @@ object Sorting {
         return ca.size.compareTo(cb.size)
     }
 
+    fun naturalCompare(a: String, b: String): Int = compareKeys(naturalKey(a), naturalKey(b))
+
     fun extension(name: String): String = name.substringAfterLast('.', "").lowercase()
 
     fun sort(items: List<StorageItem>, order: SortOrder): List<StorageItem> {
+        // Keys are computed once per item, not once per comparison (large folders).
+        val keys = HashMap<String, List<String>>(items.size * 2)
+        items.forEach { keys[it.path] = naturalKey(it.name) }
+        val byName = Comparator<StorageItem> { a, b -> compareKeys(keys.getValue(a.path), keys.getValue(b.path)) }
         val base: Comparator<StorageItem> = when (order.key) {
-            SortKey.NAME -> Comparator { a, b -> naturalCompare(a.name, b.name) }
-            SortKey.MODIFIED -> compareBy { it.modifiedMillis }
-            SortKey.SIZE -> compareBy { it.sizeBytes }
-            SortKey.TYPE -> Comparator<StorageItem> { a, b -> extension(a.name).compareTo(extension(b.name)) }
-                .thenComparator { a, b -> naturalCompare(a.name, b.name) }
+            SortKey.NAME -> byName
+            SortKey.MODIFIED -> compareBy<StorageItem> { it.modifiedMillis }.then(byName)
+            SortKey.SIZE -> compareBy<StorageItem> { it.sizeBytes }.then(byName)
+            SortKey.TYPE -> Comparator<StorageItem> { a, b -> extension(a.name).compareTo(extension(b.name)) }.then(byName)
         }
         val directed = if (order.ascending) base else base.reversed()
         // Folders stay on top in both directions, as in Windows File Explorer.

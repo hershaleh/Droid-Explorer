@@ -61,4 +61,14 @@
     <string name="group_long_ago">A long time ago</string>
     <string name="folder_empty">This folder is empty.</string>
     <string name="folder_error">Can\'t open this folder.</string>
+    <string name="sort_asc">Ascending</string>
+    <string name="sort_desc">Descending</string>
+    <string name="new_folder_name">New folder</string>
+    <string name="dlg_new_folder">New folder</string>
+    <string name="dlg_create">Create</string>
+    <string name="dlg_cancel">Cancel</string>
+    <string name="dlg_ok">OK</string>
+    <string name="dlg_delete_title">Delete items</string>
+    <string name="dlg_delete_body">%1$d items will be deleted permanently. There is no recycle bin yet, so they cannot be restored.</string>
+    <string name="dlg_error_title">The operation failed</string>
 </resources>

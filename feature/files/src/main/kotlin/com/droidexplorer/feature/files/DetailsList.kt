@@ -178,11 +178,11 @@ fun ExplorerDetailsList(
     grouped: Boolean = true,
     emptyText: String? = null,
 ) {
-    val groups = if (grouped) {
+    val groups = androidx.compose.runtime.remember(items, grouped) { if (grouped) {
         DateGroup.values().map { g -> g to items.filter { it.group == g } }.filter { it.second.isNotEmpty() }
     } else {
         listOf<Pair<DateGroup?, List<ExplorerItem>>>(null to items).filter { it.second.isNotEmpty() }
-    }
+    } }
     androidx.compose.foundation.layout.Column(modifier) {
         ColumnHeader(layout)
         LazyColumn(Modifier.weight(1f)) {

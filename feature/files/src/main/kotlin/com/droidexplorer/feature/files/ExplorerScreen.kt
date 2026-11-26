@@ -28,6 +28,7 @@ fun ExplorerScreen(
     title: String? = null,
     grouped: Boolean = true,
     emptyText: String? = null,
+    interactive: Boolean = true,
 ) {
     val c = FluentTheme.colors
     BoxWithConstraints(modifier.fillMaxSize().background(c.windowBackground)) {
@@ -46,7 +47,13 @@ fun ExplorerScreen(
                     .background(c.layer),
             ) {
                 ExplorerToolbar(showSearchBox = layout != ExplorerLayout.Narrow, actions = actions, crumbs = crumbs)
-                ExplorerCommandBar(hasSelection = items.any { it.selected }, compact = layout == ExplorerLayout.Narrow)
+                ExplorerCommandBar(
+                    hasSelection = items.any { it.selected },
+                    compact = layout == ExplorerLayout.Narrow,
+                    actions = actions,
+                    singleSelection = items.count { it.selected } == 1,
+                    interactive = interactive,
+                )
                 Row(Modifier.weight(1f)) {
                     if (layout == ExplorerLayout.Wide) ExplorerNavPane()
                     ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, grouped, emptyText)

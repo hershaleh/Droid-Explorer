@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.droidexplorer.storage.api.SortKey
 import com.droidexplorer.ui.design.FluentShapes
 import com.droidexplorer.ui.design.FluentTheme
 import com.droidexplorer.ui.design.controls.ButtonStyle
@@ -139,14 +142,22 @@ private fun CommandDivider() {
 }
 
 @Composable
-private fun CommandIcon(icon: FluentIcons, enabled: Boolean = true) {
-    ToolbarIconButton(icon, enabled)
+private fun CommandIcon(icon: FluentIcons, enabled: Boolean = true, onClick: () -> Unit = {}) {
+    ToolbarIconButton(icon, enabled, onClick)
 }
 
 @Composable
-private fun CommandLabeled(icon: FluentIcons, label: String, showLabel: Boolean, chevron: Boolean) {
+private fun CommandLabeled(
+    icon: FluentIcons,
+    label: String,
+    showLabel: Boolean,
+    chevron: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit = {},
+) {
     FluentButton(
-        onClick = {},
+        onClick = onClick,
+        enabled = enabled,
         style = ButtonStyle.Subtle,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
     ) {
@@ -156,12 +167,65 @@ private fun CommandLabeled(icon: FluentIcons, label: String, showLabel: Boolean,
     }
 }
 
+@Composable
+private fun SortMenu(actions: ExplorerActions, showLabel: Boolean) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        CommandLabeled(FluentIcons.Sort, stringResource(R.string.cmd_sort), showLabel, chevron = true) { open = true }
+        val c = FluentTheme.colors
+        DropdownMenu(
+            expanded = open,
+            onDismissRequest = { open = false },
+            containerColor = c.layer,
+            shape = FluentShapes.overlay,
+        ) {
+            val keys = listOf(
+                SortKey.NAME to R.string.col_name,
+                SortKey.MODIFIED to R.string.col_modified,
+                SortKey.TYPE to R.string.col_type,
+                SortKey.SIZE to R.string.col_size,
+            )
+            keys.forEach { (key, label) ->
+                DropdownMenuItem(
+                    text = { MenuText(stringResource(label), checked = actions.sortKey == key) },
+                    onClick = { open = false; actions.onSort(key, actions.sortAscending) },
+                )
+            }
+            DropdownMenuItem(
+                text = { MenuText(stringResource(R.string.sort_asc), checked = actions.sortAscending) },
+                onClick = { open = false; actions.onSort(actions.sortKey, true) },
+            )
+            DropdownMenuItem(
+                text = { MenuText(stringResource(R.string.sort_desc), checked = !actions.sortAscending) },
+                onClick = { open = false; actions.onSort(actions.sortKey, false) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun MenuText(text: String, checked: Boolean) {
+    Text(
+        (if (checked) "\u2713  " else "\u2003 ") + text,
+        style = FluentTheme.typography.body,
+        color = FluentTheme.colors.textPrimary,
+    )
+}
+
 /**
  * Windows 11 command bar: "New" with label, icon-only Cut/Copy/Paste/Rename/Share/Delete,
  * then Sort and View, then "See more". Selection-dependent commands are disabled with no selection.
+ * View and See-more stay disabled until their menus exist.
  */
 @Composable
-fun ExplorerCommandBar(hasSelection: Boolean, compact: Boolean, modifier: Modifier = Modifier) {
+fun ExplorerCommandBar(
+    hasSelection: Boolean,
+    compact: Boolean,
+    modifier: Modifier = Modifier,
+    actions: ExplorerActions = ExplorerActions(),
+    singleSelection: Boolean = hasSelection,
+    interactive: Boolean = true,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -171,18 +235,18 @@ fun ExplorerCommandBar(hasSelection: Boolean, compact: Boolean, modifier: Modifi
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        CommandLabeled(FluentIcons.Add, stringResource(R.string.cmd_new), showLabel = true, chevron = true)
+        CommandLabeled(FluentIcons.Add, stringResource(R.string.cmd_new), showLabel = true, chevron = false, enabled = interactive, onClick = actions.onNewFolder)
         CommandDivider()
-        CommandIcon(FluentIcons.Cut, hasSelection)
-        CommandIcon(FluentIcons.Copy, hasSelection)
-        CommandIcon(FluentIcons.Paste, enabled = false)
-        CommandIcon(FluentIcons.Rename, hasSelection)
-        CommandIcon(FluentIcons.Share, hasSelection)
-        CommandIcon(FluentIcons.Delete, hasSelection)
+        CommandIcon(FluentIcons.Cut, hasSelection, actions.onCut)
+        CommandIcon(FluentIcons.Copy, hasSelection, actions.onCopy)
+        CommandIcon(FluentIcons.Paste, actions.canPaste, actions.onPaste)
+        CommandIcon(FluentIcons.Rename, singleSelection && hasSelection, actions.onRename)
+        CommandIcon(FluentIcons.Share, hasSelection, actions.onShare)
+        CommandIcon(FluentIcons.Delete, hasSelection, actions.onDelete)
         CommandDivider()
-        CommandLabeled(FluentIcons.Sort, stringResource(R.string.cmd_sort), showLabel = !compact, chevron = true)
-        CommandLabeled(FluentIcons.View, stringResource(R.string.cmd_view), showLabel = !compact, chevron = true)
+        SortMenu(actions, showLabel = !compact)
+        CommandLabeled(FluentIcons.View, stringResource(R.string.cmd_view), showLabel = !compact, chevron = true, enabled = false)
         CommandDivider()
-        CommandIcon(FluentIcons.More)
+        CommandIcon(FluentIcons.More, enabled = false)
     }
 }

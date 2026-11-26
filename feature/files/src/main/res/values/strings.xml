@@ -61,4 +61,14 @@
     <string name="group_long_ago">לפני זמן רב</string>
     <string name="folder_empty">התיקייה ריקה</string>
     <string name="folder_error">לא ניתן לפתוח את התיקייה</string>
+    <string name="sort_asc">עולה</string>
+    <string name="sort_desc">יורד</string>
+    <string name="new_folder_name">תיקייה חדשה</string>
+    <string name="dlg_new_folder">תיקייה חדשה</string>
+    <string name="dlg_create">יצירה</string>
+    <string name="dlg_cancel">ביטול</string>
+    <string name="dlg_ok">אישור</string>
+    <string name="dlg_delete_title">מחיקת פריטים</string>
+    <string name="dlg_delete_body">%1$d פריטים יימחקו לצמיתות. אין עדיין סל מיחזור, ולא ניתן יהיה לשחזר אותם.</string>
+    <string name="dlg_error_title">הפעולה נכשלה</string>
 </resources>
