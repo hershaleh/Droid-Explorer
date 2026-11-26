@@ -30,7 +30,43 @@ interface StorageProvider {
     fun copy(path: String, targetFolder: String): StorageItem
     fun move(path: String, targetFolder: String): StorageItem
     fun delete(path: String)
+
+    /**
+     * Copies or moves [sources] into [targetFolder] with progress, cancellation and Windows-style conflict
+     * questions. Copying into the same folder never asks: it creates "name - עותק". Folders are merged.
+     * Blocking: call from a background thread.
+     */
+    fun transfer(sources: List<String>, targetFolder: String, move: Boolean, listener: TransferListener): TransferResult
 }
+
+enum class ConflictChoice { REPLACE, SKIP, KEEP_BOTH }
+
+/** [applyToAll] makes the same choice apply to every further conflict in this operation. */
+data class ConflictDecision(val choice: ConflictChoice, val applyToAll: Boolean = false)
+
+/** A file in the destination that has the same name as an incoming file. */
+data class Conflict(val source: StorageItem, val existing: StorageItem)
+
+data class TransferProgress(
+    val currentName: String,
+    val doneBytes: Long,
+    val totalBytes: Long,
+    val doneItems: Int,
+    val totalItems: Int,
+    val bytesPerSecond: Long,
+)
+
+interface TransferListener {
+    fun onProgress(progress: TransferProgress) {}
+
+    /** Blocks until the user decides. Returning null cancels the whole operation. */
+    fun onConflict(conflict: Conflict): ConflictDecision? = ConflictDecision(ConflictChoice.KEEP_BOTH)
+
+    fun isCancelled(): Boolean = false
+}
+
+/** [created] holds the new top-level paths in the destination (what to select afterwards). */
+data class TransferResult(val created: List<String>, val skipped: Int, val cancelled: Boolean)
 
 /** Windows-style sorting: folders first, natural (numeric-aware) name order, case-insensitive. */
 object Sorting {

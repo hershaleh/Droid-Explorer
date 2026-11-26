@@ -2,11 +2,15 @@ package com.droidexplorer.storage.local
 
 import com.droidexplorer.core.capabilities.Capability
 import com.droidexplorer.core.capabilities.CapabilitySet
+import com.droidexplorer.storage.api.Conflict
+import com.droidexplorer.storage.api.ConflictChoice
 import com.droidexplorer.storage.api.NameConflict
 import com.droidexplorer.storage.api.NameRules
 import com.droidexplorer.storage.api.StorageException
 import com.droidexplorer.storage.api.StorageItem
 import com.droidexplorer.storage.api.StorageProvider
+import com.droidexplorer.storage.api.TransferListener
+import com.droidexplorer.storage.api.TransferResult
 import java.io.File
 
 /**
@@ -82,6 +86,15 @@ class LocalStorageProvider : StorageProvider {
         if (!f.exists()) throw StorageException("Missing: $path")
         if (!f.deleteRecursively()) throw StorageException("Cannot delete: $path")
     }
+
+    override fun transfer(
+        sources: List<String>,
+        targetFolder: String,
+        move: Boolean,
+        listener: TransferListener,
+    ): TransferResult = FileTransfer(this, sources.map(::File), File(targetFolder), move, listener).run()
+
+    internal fun itemOf(file: File): StorageItem = file.toItem()
 
     private fun checkName(name: String) {
         NameRules.validate(name)?.let { throw StorageException("Invalid name ($it): $name") }
