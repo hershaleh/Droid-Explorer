@@ -37,10 +37,10 @@ enum class ExplorerLayout { Wide, Medium, Narrow }
 
 private data class Columns(val modified: Dp?, val type: Dp?, val size: Dp?)
 
-private fun ExplorerLayout.columns(): Columns = when (this) {
-    ExplorerLayout.Wide -> Columns(modified = 170.dp, type = 140.dp, size = 100.dp)
-    ExplorerLayout.Medium -> Columns(modified = 150.dp, type = null, size = 90.dp)
-    ExplorerLayout.Narrow -> Columns(modified = 130.dp, type = null, size = null)
+private fun ExplorerLayout.columns(fontScale: Float): Columns = when (this) {
+    ExplorerLayout.Wide -> Columns(modified = 170.dp * fontScale, type = 140.dp * fontScale, size = 100.dp * fontScale)
+    ExplorerLayout.Medium -> Columns(modified = 150.dp * fontScale, type = null, size = 90.dp * fontScale)
+    ExplorerLayout.Narrow -> Columns(modified = 130.dp * fontScale, type = null, size = null)
 }
 
 @Composable
@@ -63,7 +63,7 @@ private fun HeaderCell(text: String, modifier: Modifier, sorted: Boolean = false
 
 @Composable
 private fun ColumnHeader(layout: ExplorerLayout) {
-    val cols = layout.columns()
+    val cols = layout.columns(maxOf(1f, androidx.compose.ui.platform.LocalDensity.current.fontScale))
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
         HeaderCell(stringResource(R.string.col_name), Modifier.weight(1f), sorted = true)
         cols.modified?.let { HeaderCell(stringResource(R.string.col_modified), Modifier.width(it)) }
@@ -90,7 +90,7 @@ private fun GroupHeader(group: DateGroup, count: Int) {
 @Composable
 private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout) {
     val c = FluentTheme.colors
-    val cols = layout.columns()
+    val cols = layout.columns(maxOf(1f, androidx.compose.ui.platform.LocalDensity.current.fontScale))
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     val fill = when {
