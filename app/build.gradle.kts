@@ -16,6 +16,17 @@ android {
         versionName = "0.0.1"
     }
 
+    // A fixed debug key (not a secret) so every CI build is signed identically and installs as an update.
+    // Release builds will use a private key kept in GitHub secrets, never in the repository.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

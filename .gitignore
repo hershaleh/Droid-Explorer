@@ -16,6 +16,7 @@ captures/
 # Secrets and signing - never commit
 *.jks
 *.keystore
+!app/debug.keystore
 *.p12
 *.pem
 keystore.properties
