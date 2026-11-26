@@ -60,5 +60,5 @@
     <string name="group_this_year">Earlier this year</string>
     <string name="group_long_ago">A long time ago</string>
     <string name="folder_empty">This folder is empty.</string>
-    <string name="folder_error">Can't open this folder.</string>
+    <string name="folder_error">Can\'t open this folder.</string>
 </resources>
