@@ -2,6 +2,7 @@ package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,9 +36,9 @@ import com.droidexplorer.ui.design.icons.FluentIcon
 import com.droidexplorer.ui.design.icons.FluentIcons
 
 @Composable
-private fun ToolbarIconButton(icon: FluentIcons, enabled: Boolean = true) {
+private fun ToolbarIconButton(icon: FluentIcons, enabled: Boolean = true, onClick: () -> Unit = {}) {
     FluentButton(
-        onClick = {},
+        onClick = onClick,
         style = ButtonStyle.Subtle,
         enabled = enabled,
         contentPadding = PaddingValues(8.dp),
@@ -49,7 +50,12 @@ private fun ToolbarIconButton(icon: FluentIcons, enabled: Boolean = true) {
 
 /** Back, forward, up and refresh buttons, the breadcrumb address bar and the search box. */
 @Composable
-fun ExplorerToolbar(showSearchBox: Boolean, modifier: Modifier = Modifier) {
+fun ExplorerToolbar(
+    showSearchBox: Boolean,
+    modifier: Modifier = Modifier,
+    actions: ExplorerActions = ExplorerActions(),
+    crumbs: List<String>? = null,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -57,12 +63,12 @@ fun ExplorerToolbar(showSearchBox: Boolean, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        ToolbarIconButton(FluentIcons.Back)
-        ToolbarIconButton(FluentIcons.Forward, enabled = false)
-        ToolbarIconButton(FluentIcons.Up)
-        ToolbarIconButton(FluentIcons.Refresh)
+        ToolbarIconButton(FluentIcons.Back, actions.canBack, actions.onBack)
+        ToolbarIconButton(FluentIcons.Forward, actions.canForward, actions.onForward)
+        ToolbarIconButton(FluentIcons.Up, actions.canUp, actions.onUp)
+        ToolbarIconButton(FluentIcons.Refresh, true, actions.onRefresh)
         Spacer(Modifier.width(4.dp))
-        AddressBar(Modifier.weight(1f))
+        AddressBar(Modifier.weight(1f), crumbs, actions.onCrumb)
         Spacer(Modifier.width(6.dp))
         if (showSearchBox) {
             var query by remember { mutableStateOf("") }
@@ -81,9 +87,9 @@ fun ExplorerToolbar(showSearchBox: Boolean, modifier: Modifier = Modifier) {
 
 /** Windows 11 address bar: folder glyph, breadcrumb segments separated by chevrons, history chevron. */
 @Composable
-fun AddressBar(modifier: Modifier = Modifier) {
+fun AddressBar(modifier: Modifier = Modifier, crumbs: List<String>? = null, onCrumb: (Int) -> Unit = {}) {
     val c = FluentTheme.colors
-    val segments = listOf(
+    val segments = crumbs ?: listOf(
         stringResource(R.string.addr_this_device),
         stringResource(R.string.addr_internal),
         stringResource(R.string.nav_downloads),
@@ -108,7 +114,11 @@ fun AddressBar(modifier: Modifier = Modifier) {
         ) {
             segments.forEachIndexed { i, label ->
                 if (i > 0) FluentIcon(FluentIcons.ChevronRight, tint = c.textSecondary, size = 10.dp)
-                Box(Modifier.clip(FluentShapes.control).padding(horizontal = 6.dp, vertical = 4.dp)) {
+                Box(
+                    Modifier.clip(FluentShapes.control)
+                        .clickable { onCrumb(i) }
+                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                ) {
                     Text(label, style = FluentTheme.typography.body, color = c.textPrimary, maxLines = 1)
                 }
             }

@@ -23,6 +23,11 @@ import com.droidexplorer.ui.design.FluentTheme
 fun ExplorerScreen(
     modifier: Modifier = Modifier,
     items: List<ExplorerItem> = SampleData.downloads,
+    actions: ExplorerActions = ExplorerActions(),
+    crumbs: List<String>? = null,
+    title: String? = null,
+    grouped: Boolean = true,
+    emptyText: String? = null,
 ) {
     val c = FluentTheme.colors
     BoxWithConstraints(modifier.fillMaxSize().background(c.windowBackground)) {
@@ -32,7 +37,7 @@ fun ExplorerScreen(
             else -> ExplorerLayout.Narrow
         }
         Column(Modifier.fillMaxSize()) {
-            ExplorerTabStrip(titles = listOf(stringResource(R.string.nav_downloads)), selectedIndex = 0)
+            ExplorerTabStrip(titles = listOf(title ?: stringResource(R.string.nav_downloads)), selectedIndex = 0)
             Column(
                 Modifier
                     .weight(1f)
@@ -40,11 +45,11 @@ fun ExplorerScreen(
                     .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                     .background(c.layer),
             ) {
-                ExplorerToolbar(showSearchBox = layout != ExplorerLayout.Narrow)
+                ExplorerToolbar(showSearchBox = layout != ExplorerLayout.Narrow, actions = actions, crumbs = crumbs)
                 ExplorerCommandBar(hasSelection = items.any { it.selected }, compact = layout == ExplorerLayout.Narrow)
                 Row(Modifier.weight(1f)) {
                     if (layout == ExplorerLayout.Wide) ExplorerNavPane()
-                    ExplorerDetailsList(items, layout, Modifier.weight(1f))
+                    ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, grouped, emptyText)
                 }
                 ExplorerStatusBar(items)
             }

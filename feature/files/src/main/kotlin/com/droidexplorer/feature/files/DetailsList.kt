@@ -1,7 +1,7 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
@@ -87,8 +87,9 @@ private fun GroupHeader(group: DateGroup, count: Int) {
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout) {
+private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: ExplorerActions) {
     val c = FluentTheme.colors
     val cols = layout.columns(maxOf(1f, androidx.compose.ui.platform.LocalDensity.current.fontScale))
     val interaction = remember { MutableInteractionSource() }
@@ -105,7 +106,12 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout) {
             .height(32.dp)
             .clip(FluentShapes.control)
             .background(fill, FluentShapes.control)
-            .clickable(interactionSource = interaction, indication = null, onClick = {}),
+            .combinedClickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = { actions.onOpen(item) },
+                onLongClick = { actions.onToggleSelect(item) },
+            ),
     ) {
         if (item.selected) {
             Box(
@@ -164,14 +170,35 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout) {
 
 /** Details view: sortable column header, date groups with a rule line, and rows with a selection pill. */
 @Composable
-fun ExplorerDetailsList(items: List<ExplorerItem>, layout: ExplorerLayout, modifier: Modifier = Modifier) {
-    val groups = DateGroup.values().map { g -> g to items.filter { it.group == g } }.filter { it.second.isNotEmpty() }
+fun ExplorerDetailsList(
+    items: List<ExplorerItem>,
+    layout: ExplorerLayout,
+    modifier: Modifier = Modifier,
+    actions: ExplorerActions = ExplorerActions(),
+    grouped: Boolean = true,
+    emptyText: String? = null,
+) {
+    val groups = if (grouped) {
+        DateGroup.values().map { g -> g to items.filter { it.group == g } }.filter { it.second.isNotEmpty() }
+    } else {
+        listOf<Pair<DateGroup?, List<ExplorerItem>>>(null to items).filter { it.second.isNotEmpty() }
+    }
     androidx.compose.foundation.layout.Column(modifier) {
         ColumnHeader(layout)
         LazyColumn(Modifier.weight(1f)) {
             groups.forEach { (group, rows) ->
-                item(key = "group-${group.name}") { GroupHeader(group, rows.size) }
-                items(rows, key = { it.name }) { ItemRow(it, layout) }
+                if (group != null) item(key = "group-${group.name}") { GroupHeader(group, rows.size) }
+                items(rows, key = { it.path }) { ItemRow(it, layout, actions) }
+            }
+            if (items.isEmpty() && emptyText != null) {
+                item(key = "empty") {
+                    Text(
+                        emptyText,
+                        style = FluentTheme.typography.body,
+                        color = FluentTheme.colors.textSecondary,
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    )
+                }
             }
         }
     }

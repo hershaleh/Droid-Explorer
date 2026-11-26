@@ -2,4 +2,7 @@
 <resources>
     <string name="app_name" translatable="false">Droid Explorer</string>
     <string name="stage0_hello">Droid Explorer – שלב אפס</string>
+    <string name="perm_title">נדרשת גישה לכל הקבצים</string>
+    <string name="perm_body">כדי לנהל את הקבצים במכשיר, האפליקציה צריכה הרשאת גישה לכל הקבצים. האפליקציה לא שולחת קבצים לשום מקום.</string>
+    <string name="perm_button">פתיחת ההגדרות</string>
 </resources>

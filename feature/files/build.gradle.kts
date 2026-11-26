@@ -36,6 +36,9 @@ kotlin {
 dependencies {
     implementation(project(":ui:design"))
     implementation(project(":core:capabilities"))
+    implementation(project(":storage:api"))
+    implementation(project(":storage:local"))
+    implementation(libs.androidx.activity.compose)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

@@ -7,7 +7,7 @@ import java.util.Locale
 
 enum class ItemKind { Folder, Pdf, Zip, Image, Audio, Video, Document, Apk, Text }
 
-enum class DateGroup { Today, EarlierThisWeek, EarlierThisMonth }
+enum class DateGroup { Today, Yesterday, EarlierThisWeek, LastWeek, EarlierThisMonth, LastMonth, EarlierThisYear, LongAgo }
 
 /** One row of the details list. [sizeKb] is null for folders. */
 data class ExplorerItem(
@@ -17,6 +17,7 @@ data class ExplorerItem(
     val sizeKb: Long?,
     val group: DateGroup,
     val selected: Boolean = false,
+    val path: String = name,
 )
 
 @Composable
@@ -38,8 +39,13 @@ fun ItemKind.typeLabel(): String = stringResource(
 fun DateGroup.label(): String = stringResource(
     when (this) {
         DateGroup.Today -> R.string.group_today
+        DateGroup.Yesterday -> R.string.group_yesterday
         DateGroup.EarlierThisWeek -> R.string.group_this_week
+        DateGroup.LastWeek -> R.string.group_last_week
         DateGroup.EarlierThisMonth -> R.string.group_this_month
+        DateGroup.LastMonth -> R.string.group_last_month
+        DateGroup.EarlierThisYear -> R.string.group_this_year
+        DateGroup.LongAgo -> R.string.group_long_ago
     },
 )
 

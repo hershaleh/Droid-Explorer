@@ -54,4 +54,11 @@
     <string name="status_selected_many">%1$d items selected</string>
     <string name="view_details">Details</string>
     <string name="view_tiles">Tiles</string>
+    <string name="group_yesterday">Yesterday</string>
+    <string name="group_last_week">Last week</string>
+    <string name="group_last_month">Last month</string>
+    <string name="group_this_year">Earlier this year</string>
+    <string name="group_long_ago">A long time ago</string>
+    <string name="folder_empty">This folder is empty.</string>
+    <string name="folder_error">Can't open this folder.</string>
 </resources>

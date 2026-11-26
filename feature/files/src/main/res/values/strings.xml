@@ -54,4 +54,11 @@
     <string name="status_selected_many">%1$d פריטים נבחרו</string>
     <string name="view_details">פרטים</string>
     <string name="view_tiles">אריחים</string>
+    <string name="group_yesterday">אתמול</string>
+    <string name="group_last_week">שבוע שעבר</string>
+    <string name="group_last_month">חודש שעבר</string>
+    <string name="group_this_year">מוקדם יותר השנה</string>
+    <string name="group_long_ago">לפני זמן רב</string>
+    <string name="folder_empty">התיקייה ריקה</string>
+    <string name="folder_error">לא ניתן לפתוח את התיקייה</string>
 </resources>

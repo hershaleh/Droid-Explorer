@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="stage0_hello">Droid Explorer – Stage 0</string>
+    <string name="perm_title">All files access is required</string>
+    <string name="perm_body">To manage files on this device, the app needs permission to access all files. Nothing is sent anywhere.</string>
+    <string name="perm_button">Open settings</string>
 </resources>
