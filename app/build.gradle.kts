@@ -39,5 +39,6 @@ kotlin {
 dependencies {
     implementation(project(":core:capabilities"))
     implementation(project(":ui:design"))
+    implementation(project(":feature:files"))
     implementation(libs.androidx.activity.compose)
 }

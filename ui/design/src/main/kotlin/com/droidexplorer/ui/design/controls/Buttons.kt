@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
@@ -40,6 +41,7 @@ fun FluentButton(
     modifier: Modifier = Modifier,
     style: ButtonStyle = ButtonStyle.Standard,
     enabled: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 11.dp, vertical = 5.dp),
     content: @Composable RowScope.() -> Unit,
 ) {
     val c = FluentTheme.colors
@@ -119,7 +121,7 @@ fun FluentButton(
             role = Role.Button,
             onClick = onClick,
         )
-        .padding(horizontal = 11.dp, vertical = 5.dp)
+        .padding(contentPadding)
 
     CompositionLocalProvider(
         LocalContentColor provides foreground,

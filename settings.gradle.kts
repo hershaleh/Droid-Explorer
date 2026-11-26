@@ -19,3 +19,4 @@ rootProject.name = "DroidExplorer"
 include(":app")
 include(":core:capabilities")
 include(":ui:design")
+include(":feature:files")

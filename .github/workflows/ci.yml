@@ -42,7 +42,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          gradle :ui:design:recordRoborazziDebug --console=plain 2>&1 | tee shots.log
+          gradle recordRoborazziDebug --console=plain 2>&1 | tee shots.log
 
       - name: Upload debug APK
         if: success()
@@ -76,7 +76,7 @@ jobs:
             tail -n 60 shots.log 2>/dev/null || true
           } > "$name"
           mkdir -p /tmp/shots
-          cp ui/design/build/outputs/roborazzi/*.png /tmp/shots/ 2>/dev/null || true
+          find . -path "*/build/outputs/roborazzi/*.png" -exec cp {} /tmp/shots/ \; 2>/dev/null || true
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
           git checkout --orphan ci-logs

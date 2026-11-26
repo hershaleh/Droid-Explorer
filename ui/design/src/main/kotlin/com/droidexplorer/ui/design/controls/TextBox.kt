@@ -38,6 +38,7 @@ fun FluentTextBox(
     enabled: Boolean = true,
     singleLine: Boolean = true,
     leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val c = FluentTheme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -90,6 +91,9 @@ fun FluentTextBox(
                         Text(text = placeholder, style = textStyle, color = c.textSecondary)
                     }
                     inner()
+                }
+                if (trailing != null) {
+                    Box(Modifier.padding(start = 8.dp)) { trailing() }
                 }
             }
         },
