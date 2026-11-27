@@ -121,12 +121,16 @@ private fun drawIcon(scope: DrawScope, tint: Color, icon: FluentIcons, sw: Float
             p.line(7f, 10f, 13f, 10f); p.line(7f, 13f, 11f, 13f)
         }
         FluentIcons.Rename -> {
-            p.rrect(2.5f, 5.5f, 15f, 9f, 1.8f)
-            p.line(10f, 8f, 10f, 12f); p.line(8.5f, 8f, 11.5f, 8f); p.line(8.5f, 12f, 11.5f, 12f)
+            // A text field with a caret and a short word: "rename" as drawn by Windows 11.
+            p.rrect(2.5f, 5f, 15f, 10f, 1.8f)
+            p.line(11.5f, 7.2f, 11.5f, 12.8f); p.line(10.3f, 7.2f, 12.7f, 7.2f); p.line(10.3f, 12.8f, 12.7f, 12.8f)
+            p.line(5.2f, 10f, 8.8f, 10f)
         }
         FluentIcons.Share -> {
-            p.poly(7f, 8.5f, 5f, 8.5f, 5f, 16.5f, 15f, 16.5f, 15f, 8.5f, 13f, 8.5f)
-            p.line(10f, 12f, 10f, 3f); p.poly(6.8f, 6.2f, 10f, 3f, 13.2f, 6.2f)
+            // An open box with an arrow leaving it towards the top corner.
+            p.poly(9f, 4.5f, 6f, 4.5f, 4.5f, 6f, 4.5f, 15f, 6f, 16.5f, 14f, 16.5f, 15.5f, 15f, 15.5f, 11.5f)
+            p.line(9.5f, 10.5f, 16f, 4f)
+            p.poly(11.8f, 3.8f, 16.2f, 3.8f, 16.2f, 8.2f)
         }
         FluentIcons.Delete -> {
             p.line(3.5f, 6f, 16.5f, 6f); p.poly(7.5f, 6f, 7.5f, 3.8f, 12.5f, 3.8f, 12.5f, 6f)

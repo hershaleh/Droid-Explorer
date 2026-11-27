@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,6 +48,34 @@ fun FluentTextBox(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
+    FluentTextBox(
+        value = TextFieldValue(value),
+        onValueChange = { onValueChange(it.text) },
+        modifier = modifier,
+        placeholder = placeholder,
+        enabled = enabled,
+        singleLine = singleLine,
+        leading = leading,
+        trailing = trailing,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+    )
+}
+
+/** Same text box, but the caller controls the selection (for example "select everything on first tap"). */
+@Composable
+fun FluentTextBox(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    singleLine: Boolean = true,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+) {
     val c = FluentTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -64,6 +96,9 @@ fun FluentTextBox(
     val bottomHeight = if (focused) 2.dp else 1.dp
     val textStyle = FluentTheme.typography.body.copy(color = if (enabled) c.textPrimary else c.textDisabled)
 
+    CompositionLocalProvider(
+        LocalTextSelectionColors provides TextSelectionColors(c.accent, c.accent.copy(alpha = 0.45f)),
+    ) {
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -93,7 +128,7 @@ fun FluentTextBox(
                     Box(Modifier.padding(end = 8.dp)) { leading() }
                 }
                 Box(Modifier.weight(1f)) {
-                    if (value.isEmpty() && placeholder != null) {
+                    if (value.text.isEmpty() && placeholder != null) {
                         Text(text = placeholder, style = textStyle, color = c.textSecondary)
                     }
                     inner()
@@ -104,4 +139,5 @@ fun FluentTextBox(
             }
         },
     )
+    }
 }

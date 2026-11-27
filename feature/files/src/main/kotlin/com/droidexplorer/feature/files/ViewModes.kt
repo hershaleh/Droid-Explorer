@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +43,9 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
     val c = FluentTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
+    val pressed by interaction.collectIsPressedAsState()
     val fill = when {
+        pressed -> c.subtleFillTertiary
         item.selected -> c.accent.copy(alpha = if (c.isDark) 0.22f else 0.14f)
         hovered -> c.subtleFillSecondary
         else -> Color.Transparent
@@ -51,6 +54,28 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
         ViewMode.List -> 32.dp
         ViewMode.Tiles -> 60.dp
         else -> 112.dp
+    }
+    val name: @Composable (Modifier, Int, TextAlign) -> Unit = { mod, lines, align ->
+        if (actions.renamingPath == item.path) {
+            InlineRenameField(
+                initial = item.name,
+                isFolder = item.kind == ItemKind.Folder,
+                onCommit = { actions.onRenameCommit(item.path, it) },
+                onCancel = actions.onRenameCancel,
+                modifier = mod,
+                singleLine = lines == 1,
+            )
+        } else {
+            Text(
+                item.name,
+                style = if (mode == ViewMode.Icons) FluentTheme.typography.caption else FluentTheme.typography.body,
+                color = c.textPrimary,
+                maxLines = lines,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = align,
+                modifier = mod,
+            )
+        }
     }
     Box(
         Modifier
@@ -61,7 +86,7 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
             .background(fill, FluentShapes.control)
             .combinedClickable(
                 interactionSource = interaction,
-                indication = null,
+                indication = androidx.compose.material3.ripple(color = c.textPrimary),
                 onClick = { actions.onOpen(item) },
                 onLongClick = { actions.onToggleSelect(item) },
             ),
@@ -70,13 +95,13 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
             ViewMode.List -> Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 FileGlyph(item.kind)
                 Spacer(Modifier.width(8.dp))
-                Text(item.name, style = FluentTheme.typography.body, color = c.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                name(Modifier, 1, TextAlign.Start)
             }
             ViewMode.Tiles -> Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 FileGlyph(item.kind, glyphSize = 36.dp)
                 Spacer(Modifier.width(10.dp))
                 Column {
-                    Text(item.name, style = FluentTheme.typography.body, color = c.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    name(Modifier, 1, TextAlign.Start)
                     Text(item.kind.typeLabel(), style = FluentTheme.typography.caption, color = c.textSecondary, maxLines = 1)
                     item.sizeKb?.let { Text(formatSizeKb(it), style = FluentTheme.typography.caption, color = c.textSecondary, maxLines = 1) }
                 }
@@ -87,14 +112,7 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 FileGlyph(item.kind, glyphSize = 56.dp)
-                Text(
-                    item.name,
-                    style = FluentTheme.typography.caption,
-                    color = c.textPrimary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
+                name(Modifier, 2, TextAlign.Center)
             }
         }
     }

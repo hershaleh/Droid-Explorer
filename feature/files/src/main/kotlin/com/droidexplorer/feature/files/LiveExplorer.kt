@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.droidexplorer.storage.api.Conflict
 import com.droidexplorer.storage.api.ConflictChoice
 import com.droidexplorer.storage.api.ConflictDecision
+import com.droidexplorer.storage.api.NameRules
 import com.droidexplorer.storage.api.SortOrder
 import com.droidexplorer.storage.api.TransferListener
 import com.droidexplorer.storage.api.TransferProgress
@@ -37,14 +38,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private sealed interface Dialog {
-    data object NewFolder : Dialog
-    data object Rename : Dialog
     data object Delete : Dialog
+    /** File operation problems: shown in the classic File Explorer style. */
     data class Error(val message: String) : Dialog
+    /** Address bar problems: shown in the Windows 11 Settings style. */
+    data class PathError(val message: String) : Dialog
+    data class ConfirmExtension(val path: String, val newName: String) : Dialog
 }
 
 /** A running copy/move as shown in the progress dialog. */
-private data class TransferUi(val progress: TransferProgress, val moving: Boolean, val from: String, val to: String)
+data class TransferUi(val progress: TransferProgress, val moving: Boolean, val from: String, val to: String)
 
 /** A conflict waiting for the user; the transfer thread blocks on [answer]. */
 private data class PendingConflict(val conflict: Conflict, val answer: CompletableFuture<ConflictDecision?>)
@@ -159,6 +162,35 @@ fun LiveExplorerScreen(
         }
     }
 
+    val errEmpty = stringResource(R.string.rename_err_empty)
+    val errInvalid = stringResource(R.string.rename_err_invalid)
+    val errExists = stringResource(R.string.rename_err_exists)
+
+    fun doRename(path: String, name: String) {
+        scope.launch {
+            val result = withContext(Dispatchers.IO) { runCatching { provider.rename(path, name) } }
+            controller.cancelRename()
+            result.onSuccess { controller.refresh(); controller.selectAndReveal(listOf(it.path)) }
+            result.exceptionOrNull()?.let { e ->
+                dialog = Dialog.Error(if (e.message.orEmpty().startsWith("Already exists")) errExists else e.message ?: errInvalid)
+            }
+        }
+    }
+
+    fun commitRename(path: String, typed: String) {
+        val old = File(path).name
+        val name = typed.trim()
+        when {
+            name == old -> controller.cancelRename()
+            name.isEmpty() -> { controller.cancelRename(); dialog = Dialog.Error(errEmpty) }
+            NameRules.validate(name) != null -> { controller.cancelRename(); dialog = Dialog.Error(errInvalid) }
+            // Windows warns before a file's extension is changed or removed.
+            !File(path).isDirectory && old.substringAfterLast('.', "") != name.substringAfterLast('.', "") &&
+                old.contains('.') -> dialog = Dialog.ConfirmExtension(path, name)
+            else -> doRename(path, name)
+        }
+    }
+
     val actions = ExplorerActions(
         canBack = controller.canBack,
         canForward = controller.canForward,
@@ -184,18 +216,30 @@ fun LiveExplorerScreen(
             scope.launch {
                 val target = text.trimEnd('/').ifEmpty { "/" }
                 val ok = withContext(Dispatchers.IO) { runCatching { provider.list(target) }.isSuccess }
-                if (ok) controller.navigate(target) else dialog = Dialog.Error(notFound)
+                if (ok) controller.navigate(target) else dialog = Dialog.PathError(notFound)
             }
         },
         canPaste = controller.clipboard.isNotEmpty(),
         sortKey = controller.sort.key,
         sortAscending = controller.sort.ascending,
-        onNewFolder = { dialog = Dialog.NewFolder },
+        onNewFolder = {
+            // Like Windows: the folder appears at once with its name selected for typing, no dialog.
+            scope.launch {
+                val name = controller.uniqueName(newFolderName)
+                val created = withContext(Dispatchers.IO) { runCatching { provider.createFolder(controller.currentPath, name) } }
+                created.onSuccess {
+                    controller.refresh()
+                    controller.selectAndReveal(listOf(it.path))
+                    controller.startRename(it.path)
+                }
+                created.exceptionOrNull()?.let { e -> dialog = Dialog.Error(e.message ?: "error") }
+            }
+        },
         // Leaving selection mode after Cut/Copy lets a tap open folders again, so the person can go and paste.
         onCut = { controller.cutSelection(); controller.clearSelection() },
         onCopy = { controller.copySelection(); controller.clearSelection() },
         onPaste = ::startPaste,
-        onRename = { dialog = Dialog.Rename },
+        onRename = { controller.selection.singleOrNull()?.let(controller::startRename) },
         onShare = { onShare(controller.selection.toList()) },
         onDelete = { dialog = Dialog.Delete },
         onSort = { key, asc -> controller.changeSort(SortOrder(key, asc)) },
@@ -211,6 +255,9 @@ fun LiveExplorerScreen(
         query = controller.query,
         onQuery = controller::updateQuery,
         searchHint = searchHint,
+        renamingPath = controller.renamingPath,
+        onRenameCommit = ::commitRename,
+        onRenameCancel = controller::cancelRename,
     )
     ExplorerScreen(
         items = rows,
@@ -231,96 +278,22 @@ fun LiveExplorerScreen(
             ?: if (searching) searchEmpty else stringResource(R.string.folder_empty),
     )
 
-    transferUi?.let { ui ->
-        val p = ui.progress
-        val percent = if (p.totalBytes > 0) ((p.doneBytes * 100) / p.totalBytes).toInt().coerceIn(0, 100)
-        else if (p.totalItems > 0) (p.doneItems * 100 / p.totalItems).coerceIn(0, 100) else 0
-        FluentContentDialog(
-            title = stringResource(R.string.transfer_title, percent),
-            onDismissRequest = {},
-            primaryText = stringResource(R.string.dlg_cancel),
-            onPrimary = { cancelFlag.set(true) },
-        ) {
-            Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                val text = FluentTheme.typography.body
-                val color = FluentTheme.colors.textPrimary
-                val line = if (ui.moving) R.string.transfer_moving else R.string.transfer_copying
-                Text(stringResource(line, p.totalItems, ui.from, ui.to), style = text, color = color)
-                FluentProgressBar(progress = percent / 100f, modifier = androidx.compose.ui.Modifier.fillMaxWidth())
-                Text(stringResource(R.string.transfer_name, p.currentName), style = text, color = color, maxLines = 1)
-                Text(
-                    stringResource(R.string.transfer_remaining, (p.totalItems - p.doneItems).coerceAtLeast(0), formatBytes((p.totalBytes - p.doneBytes).coerceAtLeast(0))),
-                    style = text, color = color,
-                )
-                Text(stringResource(R.string.transfer_speed, formatBytes(p.bytesPerSecond)), style = text, color = color)
-            }
-        }
-    }
+    transferUi?.let { ui -> TransferProgressDialog(ui, onCancel = { cancelFlag.set(true) }) }
     pending?.let { pc ->
-        var all by remember(pc) { mutableStateOf(false) }
-        fun answer(choice: ConflictChoice?) {
+        ConflictDialogs(pc.conflict, pc.conflict.totalItems) { answer ->
             pending = null
-            pc.answer.complete(choice?.let { ConflictDecision(it, all) })
-        }
-        val c = pc.conflict
-        FluentContentDialog(
-            title = stringResource(R.string.conflict_title),
-            onDismissRequest = { answer(null) },
-            primaryText = stringResource(R.string.conflict_replace),
-            onPrimary = { answer(ConflictChoice.REPLACE) },
-            secondaryText = stringResource(R.string.conflict_skip),
-            onSecondary = { answer(ConflictChoice.SKIP) },
-            tertiaryText = stringResource(R.string.conflict_keep),
-            onTertiary = { answer(ConflictChoice.KEEP_BOTH) },
-        ) {
-            Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                val text = FluentTheme.typography.body
-                Text(stringResource(R.string.conflict_body, c.source.name), style = text, color = FluentTheme.colors.textPrimary)
-                Text(
-                    stringResource(R.string.conflict_source, formatBytes(c.source.sizeBytes), ItemMapping.format(c.source.modifiedMillis)),
-                    style = text.copy(textDirection = androidx.compose.ui.text.style.TextDirection.Content), color = FluentTheme.colors.textSecondary,
-                )
-                Text(
-                    stringResource(R.string.conflict_existing, formatBytes(c.existing.sizeBytes), ItemMapping.format(c.existing.modifiedMillis)),
-                    style = text.copy(textDirection = androidx.compose.ui.text.style.TextDirection.Content), color = FluentTheme.colors.textSecondary,
-                )
-                FluentCheckBox(checked = all, onCheckedChange = { all = it }, label = stringResource(R.string.conflict_all))
-            }
+            pc.answer.complete(answer?.let { ConflictDecision(it.choice, it.applyToAll) })
         }
     }
 
     when (val d = dialog) {
-        Dialog.NewFolder -> NameDialog(
-            title = stringResource(R.string.dlg_new_folder),
-            initial = controller.uniqueName(newFolderName),
-            confirmText = stringResource(R.string.dlg_create),
-            onDismiss = { dialog = null },
-            onConfirm = { name -> dialog = null; runOp { controller.createFolder(name) } },
+        Dialog.Delete -> DeleteConfirmDialog(
+            items = controller.items.filter { it.path in controller.selection },
+            onYes = { dialog = null; runOp(controller::deleteSelected) },
+            onNo = { dialog = null },
         )
-        Dialog.Rename -> {
-            val current = controller.items.firstOrNull { it.path in controller.selection }?.name.orEmpty()
-            NameDialog(
-                title = stringResource(R.string.cmd_rename),
-                initial = current,
-                confirmText = stringResource(R.string.cmd_rename),
-                onDismiss = { dialog = null },
-                onConfirm = { name -> dialog = null; runOp { controller.renameSelected(name) } },
-            )
-        }
-        Dialog.Delete -> FluentContentDialog(
-            title = stringResource(R.string.dlg_delete_title),
-            onDismissRequest = { dialog = null },
-            primaryText = stringResource(R.string.cmd_delete),
-            onPrimary = { dialog = null; runOp(controller::deleteSelected) },
-            secondaryText = stringResource(R.string.dlg_cancel),
-        ) {
-            Text(
-                stringResource(R.string.dlg_delete_body, controller.selection.size),
-                style = FluentTheme.typography.body,
-                color = FluentTheme.colors.textPrimary,
-            )
-        }
-        is Dialog.Error -> FluentContentDialog(
+        is Dialog.Error -> ClassicMessageDialog(stringResource(R.string.dlg_error_title), d.message) { dialog = null }
+        is Dialog.PathError -> FluentContentDialog(
             title = stringResource(R.string.dlg_error_title),
             onDismissRequest = { dialog = null },
             primaryText = stringResource(R.string.dlg_ok),
@@ -328,28 +301,12 @@ fun LiveExplorerScreen(
         ) {
             Text(d.message, style = FluentTheme.typography.body, color = FluentTheme.colors.textPrimary)
         }
+        is Dialog.ConfirmExtension -> ClassicQuestionDialog(
+            title = stringResource(R.string.cmd_rename),
+            question = stringResource(R.string.rename_ext_body),
+            onYes = { dialog = null; doRename(d.path, d.newName) },
+            onNo = { dialog = null; controller.cancelRename() },
+        )
         null -> Unit
-    }
-}
-
-@Composable
-private fun NameDialog(
-    title: String,
-    initial: String,
-    confirmText: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    var text by remember { mutableStateOf(initial) }
-    FluentContentDialog(
-        title = title,
-        onDismissRequest = onDismiss,
-        primaryText = confirmText,
-        onPrimary = { if (text.isNotBlank()) onConfirm(text.trim()) },
-        secondaryText = stringResource(R.string.dlg_cancel),
-    ) {
-        Column {
-            FluentTextBox(value = text, onValueChange = { text = it }, modifier = Modifier)
-        }
     }
 }

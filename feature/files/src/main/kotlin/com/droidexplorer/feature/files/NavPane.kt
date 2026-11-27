@@ -2,6 +2,7 @@ package com.droidexplorer.feature.files
 
 import androidx.compose.foundation.background
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.platform.testTag
 import com.droidexplorer.storage.api.SortOrder
@@ -56,7 +57,17 @@ private fun NavTreeItem(
             .padding(horizontal = 4.dp, vertical = 1.dp)
             .height(32.dp)
             .clip(FluentShapes.control)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        indication = androidx.compose.material3.ripple(color = c.textPrimary),
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .background(if (selected) c.subtleFillSecondary else Color.Transparent, FluentShapes.control),
     ) {
         if (selected) {

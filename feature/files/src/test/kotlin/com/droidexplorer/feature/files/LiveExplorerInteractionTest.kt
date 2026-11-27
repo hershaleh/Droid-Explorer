@@ -6,6 +6,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -164,6 +165,45 @@ class LiveExplorerInteractionTest {
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Replace the file in the destination") > 0 }
         rule.onNodeWithText("Replace the file in the destination").performClick()
         rule.waitUntil(5000) { File(root, "Sub/a.txt").readText() == "new" }
+    }
+
+    @Test fun newFolderIsCreatedAtOnceAndNamedInPlace() {
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Sub") > 0 }
+        rule.onNodeWithText("New").performClick()
+        rule.waitUntil(5000) { File(root, "New folder").isDirectory }
+        rule.waitUntil(5000) { rule.onAllNodesWithTag("rename-input").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithTag("rename-input").performTextReplacement("Docs")
+        rule.onNodeWithTag("rename-input").performImeAction()
+        rule.waitUntil(5000) { File(root, "Docs").isDirectory && !File(root, "New folder").exists() }
+    }
+
+    @Test fun keepingBothThenPastingAgainAsksAgain() {
+        File(root, "a.txt").writeText("new")
+        File(root, "Sub/a.txt").writeText("old")
+        rule.onNodeWithContentDescription("Refresh").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("a.txt") > 0 }
+        rule.onNodeWithText("a.txt").performTouchInput { longClick() }
+        rule.onNodeWithContentDescription("Copy").performClick()
+        rule.onAllNodesWithText("Sub").onLast().performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("note.txt") > 0 }
+        rule.onNodeWithContentDescription("Paste").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Compare info for both files") > 0 }
+        rule.onNodeWithText("Compare info for both files").performClick()
+        rule.onNodeWithText("Continue").performClick()
+        rule.waitUntil(5000) { File(root, "Sub/a (1).txt").exists() }
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("a (1).txt") > 0 }
+        rule.onNodeWithContentDescription("Paste").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Replace the file in the destination") > 0 }
+    }
+
+    @Test fun deleteAsksForConfirmationWithDetails() {
+        openSub()
+        rule.onNodeWithText("note.txt").performTouchInput { longClick() }
+        rule.onNodeWithContentDescription("Delete").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Are you sure you want to permanently delete this file?") > 0 }
+        assertTrue(File(root, "Sub/note.txt").exists())
+        rule.onNodeWithText("Yes").performClick()
+        rule.waitUntil(5000) { !File(root, "Sub/note.txt").exists() }
     }
 
     private fun androidx.compose.ui.test.SemanticsNodeInteraction.isDisplayedSafe() =

@@ -12,7 +12,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -149,7 +151,8 @@ fun AddressBar(
     var editing by remember { mutableStateOf(false) }
     val canEdit = editablePath != null
     if (editing && editablePath != null) {
-        var text by remember(editablePath) { mutableStateOf(editablePath) }
+        // The whole path starts selected (blue) so Delete or typing replaces it; a second tap edits normally.
+        var text by remember(editablePath) { mutableStateOf(TextFieldValue(editablePath, TextRange(0, editablePath.length))) }
         val focus = remember { FocusRequester() }
         var hadFocus by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) { focus.requestFocus() }
@@ -163,7 +166,7 @@ fun AddressBar(
                 }
                 .testTag("address-input"),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go, keyboardType = KeyboardType.Uri),
-            keyboardActions = KeyboardActions(onGo = { editing = false; onPathSubmit(text.trim()) }),
+            keyboardActions = KeyboardActions(onGo = { editing = false; onPathSubmit(text.text.trim()) }),
             leading = { FolderGlyph() },
         )
         return
@@ -192,7 +195,10 @@ fun AddressBar(
                 if (i > 0) FluentIcon(FluentIcons.ChevronRight, tint = c.textSecondary, size = 10.dp)
                 Box(
                     Modifier.clip(FluentShapes.control)
-                        .clickable { onCrumb(i) }
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = androidx.compose.material3.ripple(color = c.textPrimary),
+                        ) { onCrumb(i) }
                         .padding(horizontal = 6.dp, vertical = 4.dp)
                         .testTag("crumb-$i"),
                 ) {

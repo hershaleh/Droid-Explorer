@@ -45,7 +45,7 @@ enum class ConflictChoice { REPLACE, SKIP, KEEP_BOTH }
 data class ConflictDecision(val choice: ConflictChoice, val applyToAll: Boolean = false)
 
 /** A file in the destination that has the same name as an incoming file. */
-data class Conflict(val source: StorageItem, val existing: StorageItem)
+data class Conflict(val source: StorageItem, val existing: StorageItem, val totalItems: Int = 1)
 
 data class TransferProgress(
     val currentName: String,

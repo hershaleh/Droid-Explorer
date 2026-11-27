@@ -129,7 +129,7 @@ internal class FileTransfer(
 
     private fun decide(src: File, dst: File): ConflictChoice {
         sticky?.let { return it }
-        val decision = listener.onConflict(Conflict(provider.itemOf(src), provider.itemOf(dst)))
+        val decision = listener.onConflict(Conflict(provider.itemOf(src), provider.itemOf(dst), totalItems))
             ?: throw CancelledException()
         if (decision.applyToAll) sticky = decision.choice
         return decision.choice

@@ -38,4 +38,7 @@ data class ExplorerActions(
     val query: String = "",
     val onQuery: (String) -> Unit = {},
     val searchHint: String? = null,
+    val renamingPath: String? = null,
+    val onRenameCommit: (String, String) -> Unit = { _, _ -> },
+    val onRenameCancel: () -> Unit = {},
 )

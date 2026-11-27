@@ -113,6 +113,8 @@ class ExplorerController(
     var groupBy by mutableStateOf<GroupBy?>(null); private set
     var showHidden by mutableStateOf(false); private set
     var query by mutableStateOf(""); private set
+    /** The item whose name is being edited in place, as in Windows (F2 or right after New folder). */
+    var renamingPath by mutableStateOf<String?>(null); private set
 
     private val back = ArrayDeque<String>()
     private val forward = ArrayDeque<String>()
@@ -176,6 +178,9 @@ class ExplorerController(
     }
 
     fun revealed() { revealPath = null }
+
+    fun startRename(path: String) { renamingPath = path }
+    fun cancelRename() { renamingPath = null }
 
     fun createFolder(name: String): String? = attempt { provider.createFolder(currentPath, name) }
 

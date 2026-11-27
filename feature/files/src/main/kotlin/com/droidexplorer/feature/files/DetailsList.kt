@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.testTag
 import com.droidexplorer.storage.api.SortKey
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -106,7 +107,9 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
     val cols = layout.columns(maxOf(1f, androidx.compose.ui.platform.LocalDensity.current.fontScale))
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
+    val pressed by interaction.collectIsPressedAsState()
     val fill = when {
+        pressed -> c.subtleFillTertiary
         item.selected -> c.accent.copy(alpha = if (c.isDark) 0.22f else 0.14f)
         hovered -> c.subtleFillSecondary
         else -> Color.Transparent
@@ -120,7 +123,7 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
             .background(fill, FluentShapes.control)
             .combinedClickable(
                 interactionSource = interaction,
-                indication = null,
+                indication = androidx.compose.material3.ripple(color = c.textPrimary),
                 onClick = { actions.onOpen(item) },
                 onLongClick = { actions.onToggleSelect(item) },
             ),
@@ -138,13 +141,23 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
             Row(Modifier.weight(1f).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 FileGlyph(item.kind)
                 Spacer(Modifier.width(10.dp))
-                Text(
-                    item.name,
-                    style = FluentTheme.typography.body,
-                    color = c.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (actions.renamingPath == item.path) {
+                    InlineRenameField(
+                        initial = item.name,
+                        isFolder = item.kind == ItemKind.Folder,
+                        onCommit = { actions.onRenameCommit(item.path, it) },
+                        onCancel = actions.onRenameCancel,
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    Text(
+                        item.name,
+                        style = FluentTheme.typography.body,
+                        color = c.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 item.location?.let { loc ->
                     Spacer(Modifier.width(10.dp))
                     Text(loc, style = FluentTheme.typography.caption, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)

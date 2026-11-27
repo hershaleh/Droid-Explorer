@@ -116,7 +116,7 @@ fun FluentButton(
     m = m
         .clickable(
             interactionSource = interaction,
-            indication = null,
+            indication = androidx.compose.material3.ripple(color = c.textPrimary),
             enabled = enabled,
             role = Role.Button,
             onClick = onClick,
