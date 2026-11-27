@@ -97,9 +97,6 @@ fun DeleteConfirmDialog(items: List<StorageItem>, onYes: () -> Unit, onNo: () ->
     }
 }
 
-private fun secondsText(seconds: Long, secondsFmt: (Int) -> String, minutesFmt: (Int) -> String): String =
-    if (seconds < 60) secondsFmt(seconds.toInt().coerceAtLeast(1)) else minutesFmt((seconds / 60).toInt().coerceAtLeast(1))
-
 /** The File Explorer copy/move window: percent in the title, blue heading, progress bar with cancel, details. */
 @Composable
 fun TransferProgressDialog(ui: TransferUi, onCancel: () -> Unit) {
@@ -110,14 +107,11 @@ fun TransferProgressDialog(ui: TransferUi, onCancel: () -> Unit) {
     var more by remember { mutableStateOf(false) }
     val text = FluentTheme.typography.body.copy(textDirection = TextDirection.Content)
     val remainingBytes = (p.totalBytes - p.doneBytes).coerceAtLeast(0)
-    val time = if (p.bytesPerSecond > 0) {
-        secondsText(
-            remainingBytes / p.bytesPerSecond,
-            { stringResource(R.string.time_seconds, it) },
-            { stringResource(R.string.time_minutes, it) },
-        )
-    } else {
-        stringResource(R.string.time_calculating)
+    val seconds = if (p.bytesPerSecond > 0) remainingBytes / p.bytesPerSecond else -1L
+    val time = when {
+        seconds < 0 -> stringResource(R.string.time_calculating)
+        seconds < 60 -> stringResource(R.string.time_seconds, seconds.toInt().coerceAtLeast(1))
+        else -> stringResource(R.string.time_minutes, (seconds / 60).toInt())
     }
     ExplorerDialog(title = stringResource(R.string.transfer_title, percent), onDismissRequest = {}) {
         val line = if (ui.moving) R.string.transfer_moving else R.string.transfer_copying
