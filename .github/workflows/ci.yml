@@ -74,6 +74,12 @@ jobs:
             for f in $(find . -path "*/build/test-results/*" -name "TEST-*.xml"); do
               grep -m1 -o '<testsuite name="[^"]*" tests="[0-9]*" skipped="[0-9]*" failures="[0-9]*" errors="[0-9]*"' "$f" || true
             done
+            echo "----- compiler errors -----"
+            grep -E "^e: " build.log | head -40 || true
+            echo "----- test failures -----"
+            for f in $(find . -path "*/build/test-results/*" -name "TEST-*.xml"); do
+              grep -A6 "<failure" "$f" | head -14 || true
+            done
             echo "----- last 400 lines of build log -----"
             tail -n 400 build.log 2>/dev/null || true
             echo "----- screenshots step: ${{ steps.shots.outcome }} -----"
