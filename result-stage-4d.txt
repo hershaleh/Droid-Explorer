@@ -1,0 +1,334 @@
+status=success
+sha=d279bf8c8449f24470e8d6e0f7278c84fad8547c
+----- test summary (suite tests failures errors skipped) -----
+<testsuite name="com.droidexplorer.storage.local.LocalStorageProviderTest" tests="8" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.storage.local.FileTransferTest" tests="13" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.storage.api.StorageApiTest" tests="6" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.ui.design.GalleryScreenshotTest" tests="3" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.feature.files.ExplorerScreenshotTest" tests="7" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.feature.files.LiveExplorerInteractionTest" tests="17" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.feature.files.ExplorerControllerTest" tests="9" skipped="0" failures="0" errors="0"
+<testsuite name="com.droidexplorer.core.capabilities.CapabilitySetTest" tests="4" skipped="0" failures="0" errors="0"
+----- compiler errors -----
+----- test failures -----
+----- last 400 lines of build log -----
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :core:capabilities:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:capabilities:compileKotlin FROM-CACHE
+> Task :core:capabilities:compileJava NO-SOURCE
+> Task :core:capabilities:processResources NO-SOURCE
+> Task :core:capabilities:classes UP-TO-DATE
+> Task :core:capabilities:jar
+> Task :storage:api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :storage:api:compileKotlin FROM-CACHE
+> Task :storage:api:compileJava NO-SOURCE
+> Task :storage:api:processResources NO-SOURCE
+> Task :storage:api:classes UP-TO-DATE
+> Task :storage:api:jar
+> Task :storage:local:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :storage:local:compileKotlin FROM-CACHE
+> Task :storage:local:compileJava NO-SOURCE
+> Task :storage:local:processResources NO-SOURCE
+> Task :storage:local:classes UP-TO-DATE
+> Task :storage:local:jar
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :feature:files:preBuild UP-TO-DATE
+> Task :feature:files:preDebugBuild UP-TO-DATE
+> Task :ui:design:preBuild UP-TO-DATE
+> Task :ui:design:preDebugBuild UP-TO-DATE
+> Task :feature:files:writeDebugAarMetadata
+> Task :ui:design:writeDebugAarMetadata
+> Task :app:generateDebugResValues FROM-CACHE
+> Task :feature:files:generateDebugResValues FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :feature:files:generateDebugResources
+> Task :feature:files:packageDebugResources
+> Task :ui:design:generateDebugResValues FROM-CACHE
+> Task :ui:design:generateDebugResources FROM-CACHE
+> Task :ui:design:packageDebugResources FROM-CACHE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :feature:files:extractDeepLinksDebug FROM-CACHE
+> Task :feature:files:processDebugManifest FROM-CACHE
+> Task :ui:design:extractDeepLinksDebug FROM-CACHE
+> Task :ui:design:processDebugManifest FROM-CACHE
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :feature:files:compileDebugLibraryResources
+> Task :app:mergeDebugResources
+> Task :ui:design:compileDebugLibraryResources FROM-CACHE
+> Task :ui:design:parseDebugLocalResources FROM-CACHE
+> Task :ui:design:generateDebugRFile FROM-CACHE
+> Task :feature:files:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ui:design:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :feature:files:parseDebugLocalResources
+> Task :ui:design:javaPreCompileDebug FROM-CACHE
+> Task :feature:files:javaPreCompileDebug FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :feature:files:generateDebugRFile
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :feature:files:mergeDebugShaders
+> Task :feature:files:compileDebugShaders NO-SOURCE
+> Task :feature:files:generateDebugAssets UP-TO-DATE
+> Task :feature:files:packageDebugAssets
+> Task :ui:design:mergeDebugShaders
+> Task :ui:design:compileDebugShaders NO-SOURCE
+> Task :ui:design:generateDebugAssets UP-TO-DATE
+> Task :ui:design:packageDebugAssets
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:mergeDebugJniLibFolders
+> Task :feature:files:mergeDebugJniLibFolders
+> Task :feature:files:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:files:copyDebugJniLibsProjectOnly
+> Task :app:checkDebugDuplicateClasses
+> Task :ui:design:mergeDebugJniLibFolders
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :app:processDebugResources
+> Task :ui:design:mergeDebugNativeLibs NO-SOURCE
+> Task :ui:design:copyDebugJniLibsProjectOnly
+> Task :app:validateSigningDebug
+> Task :app:mergeDebugNativeLibs
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :feature:files:stripDebugDebugSymbols NO-SOURCE
+> Task :feature:files:copyDebugJniLibsProjectAndLocalJars
+> Task :feature:files:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:files:prepareDebugArtProfile
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+
+> Task :ui:design:stripDebugDebugSymbols NO-SOURCE
+> Task :feature:files:prepareLintJarForPublish
+> Task :ui:design:extractDeepLinksForAarDebug FROM-CACHE
+> Task :ui:design:copyDebugJniLibsProjectAndLocalJars
+> Task :ui:design:prepareDebugArtProfile
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :ui:design:prepareLintJarForPublish
+> Task :app:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :feature:files:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:files:checkDebugUnitTestAarMetadata
+> Task :feature:files:generateDebugUnitTestResValues FROM-CACHE
+> Task :feature:files:mapDebugUnitTestSourceSetPaths
+> Task :feature:files:generateDebugUnitTestResources FROM-CACHE
+> Task :feature:files:processDebugUnitTestManifest
+> Task :feature:files:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :feature:files:mergeDebugUnitTestResources
+> Task :feature:files:mergeDebugAssets
+> Task :feature:files:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:files:mergeDebugUnitTestAssets
+> Task :ui:design:preDebugUnitTestBuild UP-TO-DATE
+> Task :ui:design:generateDebugUnitTestResValues FROM-CACHE
+> Task :ui:design:checkDebugUnitTestAarMetadata
+> Task :ui:design:mapDebugUnitTestSourceSetPaths
+> Task :ui:design:generateDebugUnitTestResources FROM-CACHE
+> Task :feature:files:processDebugUnitTestResources
+> Task :ui:design:mergeDebugUnitTestResources FROM-CACHE
+> Task :feature:files:packageDebugUnitTestForUnitTest
+> Task :feature:files:generateDebugUnitTestConfig
+> Task :ui:design:processDebugUnitTestManifest
+> Task :ui:design:processDebugUnitTestResources FROM-CACHE
+> Task :ui:design:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :ui:design:mergeDebugAssets
+> Task :ui:design:generateDebugUnitTestAssets UP-TO-DATE
+> Task :ui:design:mergeDebugUnitTestAssets
+> Task :ui:design:packageDebugUnitTestForUnitTest
+> Task :ui:design:generateDebugUnitTestConfig
+> Task :core:capabilities:compileTestKotlin FROM-CACHE
+> Task :core:capabilities:compileTestJava NO-SOURCE
+> Task :core:capabilities:processTestResources NO-SOURCE
+> Task :core:capabilities:testClasses UP-TO-DATE
+> Task :core:capabilities:test FROM-CACHE
+> Task :storage:api:compileTestKotlin FROM-CACHE
+> Task :storage:api:compileTestJava NO-SOURCE
+> Task :storage:api:processTestResources NO-SOURCE
+> Task :storage:api:testClasses UP-TO-DATE
+> Task :storage:api:test FROM-CACHE
+> Task :storage:local:compileTestKotlin FROM-CACHE
+> Task :storage:local:compileTestJava NO-SOURCE
+> Task :storage:local:processTestResources NO-SOURCE
+> Task :storage:local:testClasses UP-TO-DATE
+> Task :storage:local:test FROM-CACHE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues FROM-CACHE
+> Task :feature:files:writeDebugLintModelMetadata
+> Task :ui:design:writeDebugLintModelMetadata
+> Task :app:extractProguardFiles
+> Task :feature:files:extractProguardFiles
+> Task :ui:design:extractProguardFiles
+> Task :feature:files:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:files:generateDebugAndroidTestResValues FROM-CACHE
+> Task :ui:design:preDebugAndroidTestBuild UP-TO-DATE
+> Task :ui:design:generateDebugAndroidTestResValues FROM-CACHE
+> Task :ui:design:compileDebugKotlin
+> Task :ui:design:compileDebugJavaWithJavac NO-SOURCE
+> Task :ui:design:processDebugJavaRes
+> Task :ui:design:bundleLibCompileToJarDebug
+> Task :ui:design:bundleLibRuntimeToJarDebug
+> Task :ui:design:bundleLibRuntimeToDirDebug
+> Task :ui:design:extractDebugAnnotations
+> Task :ui:design:mergeDebugGeneratedProguardFiles
+> Task :ui:design:mergeDebugConsumerProguardFiles
+> Task :ui:design:mergeDebugJavaResource
+> Task :ui:design:syncDebugLibJars
+> Task :ui:design:bundleDebugAar
+> Task :ui:design:assembleDebug
+> Task :ui:design:compileDebugUnitTestKotlin
+> Task :ui:design:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :ui:design:processDebugUnitTestJavaRes
+> Task :feature:files:compileDebugKotlin
+> Task :ui:design:testDebugUnitTest
+> Task :feature:files:compileDebugJavaWithJavac NO-SOURCE
+> Task :feature:files:bundleLibCompileToJarDebug
+> Task :feature:files:bundleLibRuntimeToJarDebug
+> Task :feature:files:processDebugJavaRes
+> Task :feature:files:bundleLibRuntimeToDirDebug
+> Task :feature:files:extractDebugAnnotations
+> Task :feature:files:mergeDebugGeneratedProguardFiles
+> Task :feature:files:mergeDebugConsumerProguardFiles
+> Task :feature:files:mergeDebugJavaResource
+> Task :feature:files:syncDebugLibJars
+> Task :feature:files:bundleDebugAar
+> Task :feature:files:assembleDebug
+
+> Task :app:compileDebugKotlin
+w: file:///home/runner/work/Droid-Explorer/Droid-Explorer/app/src/main/kotlin/com/droidexplorer/app/MainActivity.kt:175:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :feature:files:compileDebugUnitTestKotlin
+> Task :app:dexBuilderDebug
+> Task :app:processDebugJavaRes
+> Task :app:mergeProjectDexDebug
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:compileDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes NO-SOURCE
+> Task :app:testDebugUnitTest NO-SOURCE
+> Task :feature:files:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:files:processDebugUnitTestJavaRes
+> Task :app:mergeDebugJavaResource
+> Task :feature:files:testDebugUnitTest
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
+> Task :feature:files:finalizeTestRoborazziDebug SKIPPED
+> Task :ui:design:finalizeTestRoborazziDebug SKIPPED
+> Task :ui:design:bundleDebugLocalLintAar
+> Task :feature:files:bundleDebugLocalLintAar
+> Task :feature:files:createFullJarDebug
+> Task :ui:design:createFullJarDebug
+> Task :app:mergeLibDexDebug
+> Task :app:generateDebugAndroidTestLintModel
+> Task :ui:design:generateDebugLintModel
+> Task :feature:files:generateDebugLintModel
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :feature:files:generateDebugAndroidTestLintModel
+> Task :feature:files:generateDebugUnitTestLintModel
+> Task :feature:files:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :ui:design:generateDebugAndroidTestLintModel
+> Task :ui:design:generateDebugUnitTestLintModel
+> Task :ui:design:lintAnalyzeDebugAndroidTest
+> Task :feature:files:generateDebugLintReportModel
+> Task :ui:design:generateDebugLintReportModel
+> Task :ui:design:lintAnalyzeDebugUnitTest
+> Task :feature:files:lintAnalyzeDebugUnitTest
+> Task :ui:design:lintAnalyzeDebug
+
+> Task :ui:design:lintReportDebug
+Wrote HTML report to file:///home/runner/work/Droid-Explorer/Droid-Explorer/ui/design/build/reports/lint-results-debug.html
+
+> Task :ui:design:lintDebug
+> Task :feature:files:lintAnalyzeDebug
+
+> Task :feature:files:lintReportDebug
+Wrote HTML report to file:///home/runner/work/Droid-Explorer/Droid-Explorer/feature/files/build/reports/lint-results-debug.html
+
+> Task :feature:files:lintDebug
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///home/runner/work/Droid-Explorer/Droid-Explorer/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1795889181214.json
+
+BUILD SUCCESSFUL in 2m 17s
+176 actionable tasks: 127 executed, 49 from cache
+----- screenshots step: success -----
+> Task :feature:files:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:files:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:files:generateDebugUnitTestResValues UP-TO-DATE
+> Task :feature:files:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:files:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:files:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:files:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:files:processDebugManifest UP-TO-DATE
+> Task :ui:design:extractDeepLinksDebug UP-TO-DATE
+> Task :ui:design:processDebugManifest UP-TO-DATE
+> Task :feature:files:processDebugUnitTestManifest UP-TO-DATE
+> Task :ui:design:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:files:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:files:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:files:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:files:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:files:mergeDebugShaders UP-TO-DATE
+> Task :feature:files:compileDebugShaders NO-SOURCE
+> Task :feature:files:generateDebugAssets UP-TO-DATE
+> Task :ui:design:mergeDebugShaders UP-TO-DATE
+> Task :ui:design:compileDebugShaders NO-SOURCE
+> Task :ui:design:generateDebugAssets UP-TO-DATE
+> Task :ui:design:packageDebugAssets UP-TO-DATE
+> Task :feature:files:mergeDebugAssets UP-TO-DATE
+> Task :feature:files:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:files:packageDebugAssets UP-TO-DATE
+> Task :feature:files:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:files:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:files:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:files:processDebugJavaRes UP-TO-DATE
+> Task :feature:files:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :ui:design:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :ui:design:processDebugJavaRes UP-TO-DATE
+> Task :feature:files:testDebugUnitTest
+> Task :feature:files:finalizeTestRoborazziDebug
+> Task :feature:files:recordRoborazziDebug
+> Task :ui:design:preDebugUnitTestBuild UP-TO-DATE
+> Task :ui:design:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :ui:design:generateDebugUnitTestResValues UP-TO-DATE
+> Task :ui:design:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :ui:design:generateDebugUnitTestResources UP-TO-DATE
+> Task :ui:design:mergeDebugUnitTestResources UP-TO-DATE
+> Task :ui:design:processDebugUnitTestManifest UP-TO-DATE
+> Task :ui:design:processDebugUnitTestResources UP-TO-DATE
+> Task :ui:design:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :ui:design:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :ui:design:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :ui:design:mergeDebugAssets UP-TO-DATE
+> Task :ui:design:generateDebugUnitTestAssets UP-TO-DATE
+> Task :ui:design:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :ui:design:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :ui:design:generateDebugUnitTestConfig UP-TO-DATE
+> Task :ui:design:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :ui:design:testDebugUnitTest
+> Task :ui:design:finalizeTestRoborazziDebug
+> Task :ui:design:recordRoborazziDebug
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/shots-1795889312729.json
+
+BUILD SUCCESSFUL in 31s
+70 actionable tasks: 4 executed, 66 up-to-date
