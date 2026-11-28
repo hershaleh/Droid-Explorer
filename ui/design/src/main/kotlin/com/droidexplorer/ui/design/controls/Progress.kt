@@ -28,7 +28,7 @@ import com.droidexplorer.ui.design.FluentTheme
  * [progress] null means indeterminate.
  */
 @Composable
-fun FluentProgressBar(progress: Float?, modifier: Modifier = Modifier) {
+fun FluentProgressBar(progress: Float?, modifier: Modifier = Modifier, color: androidx.compose.ui.graphics.Color? = null) {
     val c = FluentTheme.colors
     val phase = if (progress == null) {
         val t = rememberInfiniteTransition(label = "bar")
@@ -54,7 +54,7 @@ fun FluentProgressBar(progress: Float?, modifier: Modifier = Modifier) {
         }
         val x = if (rtl) size.width - start - width else start
         if (width > 0f) {
-            drawRoundRect(c.accent, topLeft = Offset(x, 0f), size = Size(width, barH), cornerRadius = CornerRadius(barH / 2f))
+            drawRoundRect(color ?: c.accent, topLeft = Offset(x, 0f), size = Size(width, barH), cornerRadius = CornerRadius(barH / 2f))
         }
     }
 }

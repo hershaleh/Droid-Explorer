@@ -80,8 +80,8 @@
     <string name="transfer_name">שם: %1$s</string>
     <string name="transfer_remaining">פריטים שנותרו: %1$d (%2$s)</string>
     <string name="transfer_speed">מהירות: %1$s בשנייה</string>
-    <string name="conflict_title">החלפה או דילוג על קבצים</string>
-    <string name="conflict_body">ביעד כבר קיים קובץ בשם \"%1$s\"</string>
+    <string name="conflict_title">החלפת קבצים או דילוג עליהם</string>
+    <string name="conflict_body">היעד כבר כולל קובץ בשם \"%1$s\"</string>
     <string name="conflict_replace">החלף את הקובץ ביעד</string>
     <string name="conflict_skip">דלג על קובץ זה</string>
     <string name="conflict_keep">השאר את שני הקבצים</string>
@@ -121,11 +121,11 @@
     <string name="time_calculating">מחשב...</string>
     <string name="transfer_more">פרטים נוספים</string>
     <string name="transfer_less">פחות פרטים</string>
-    <string name="conflict_compare">השווה מידע בין שני הקבצים</string>
-    <string name="compare_title">אילו קבצים ברצונך לשמור?</string>
-    <string name="compare_body">אם תבחר בשתי הגרסאות, לשם הקובץ המועתק יתווסף מספר.</string>
-    <string name="compare_from">קבצים מ-%1$s</string>
-    <string name="compare_in">קבצים ב-%1$s</string>
+    <string name="conflict_compare">השווה מידע עבור שני הקבצים</string>
+    <string name="compare_title">אילו קבצים ברצונך להשאיר?</string>
+    <string name="compare_body">אם תבחר את שתי הגירסאות, יתווסף מספר לשם הקובץ המועתק.</string>
+    <string name="compare_from">קבצים מתוך %1$s</string>
+    <string name="compare_in">קבצים שכבר נמצאים ב-%1$s</string>
     <string name="compare_continue">המשך</string>
     <string name="compare_size">גודל: %1$s</string>
     <string name="compare_modified">תאריך שינוי: %1$s</string>
@@ -155,4 +155,15 @@
     <string name="props_dims">מידות:</string>
     <string name="props_calc">מחשב…</string>
     <string name="props_bytes">%1$s (%2$s בתים)</string>
+    <string name="xfer_verb_copy_one">מעתיק פריט אחד</string>
+    <string name="xfer_verb_copy_many">מעתיק %1$d פריטים</string>
+    <string name="xfer_verb_move_one">מעביר פריט אחד</string>
+    <string name="xfer_verb_move_many">מעביר %1$d פריטים</string>
+    <string name="xfer_from_word">מ-</string>
+    <string name="xfer_to_word">אל</string>
+    <string name="progress_heading">%1$s - %2$d%% הושלם</string>
+    <string name="transfer_pause">השהה</string>
+    <string name="transfer_resume">המשך</string>
+    <string name="compare_window">התנגשות קבצים</string>
+    <string name="compare_skip_identical">דלג על קבצים בעלי תאריך וגודל זהים</string>
 </resources>

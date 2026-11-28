@@ -59,6 +59,27 @@ class FileTransferTest {
         assertEquals("new", File(root, "dst/a (1).txt").readText())
     }
 
+    @Test fun skipIdenticalSkipsSameSizeAndDateWithoutAsking() {
+        val a = file("a.txt", "same"); val b = file("b.txt", "bbb")
+        val da = file("dst/a.txt", "same"); file("dst/b.txt", "different size")
+        da.setLastModified(a.lastModified())
+        val l = Ask(ConflictDecision(ConflictChoice.SKIP, skipIdentical = true))
+        val r = p.transfer(listOf(b.path, a.path), File(root, "dst").path, false, l)
+        assertEquals(1, l.asked)
+        assertEquals(2, r.skipped)
+    }
+
+    @Test fun pausedTransferWaitsUntilResumed() {
+        val src = file("big.txt", "x".repeat(1000))
+        val started = System.nanoTime()
+        val l = object : TransferListener {
+            override fun isPaused() = System.nanoTime() - started < 300_000_000L
+        }
+        p.transfer(listOf(src.path), File(root, "dst2").also { it.mkdirs() }.path, false, l)
+        assertTrue((System.nanoTime() - started) >= 250_000_000L)
+        assertTrue(File(root, "dst2/big.txt").exists())
+    }
+
     @Test fun applyToAllAsksOnlyOnce() {
         val a = file("a.txt", "A2"); val b = file("b.txt", "B2")
         file("dst/a.txt", "A"); file("dst/b.txt", "B")
