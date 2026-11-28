@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.droidexplorer.storage.api.StorageItem
 import com.droidexplorer.storage.api.StorageProvider
 import com.droidexplorer.ui.design.FluentTheme
-import com.droidexplorer.ui.design.controls.ExplorerButton
+import com.droidexplorer.ui.design.controls.ExplorerDialogButton
 import com.droidexplorer.ui.design.controls.ExplorerDialog
 import com.droidexplorer.ui.design.controls.FluentMenuDivider
 import java.io.File
@@ -109,7 +109,7 @@ fun PropertiesDialog(provider: StorageProvider, paths: List<String>, currentFold
     ExplorerDialog(
         title = stringResource(R.string.props_title, shown?.let { if (it.single) it.name else stringResource(R.string.props_multi, it.count) } ?: ""),
         onDismissRequest = onClose,
-        buttons = { ExplorerButton(stringResource(R.string.dlg_ok), onClose, default = true) },
+        buttons = { ExplorerDialogButton(stringResource(R.string.dlg_ok), onClose, isDefault = true) },
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.testTag("props-tabs")) {
             TabLabel(stringResource(R.string.props_general), tab == 0) { tab = 0 }
