@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -100,8 +99,9 @@ fun computeProperties(provider: StorageProvider, paths: List<String>, fallbackFo
 /** Windows-style Properties window: General tab, and a Details tab for a single item. */
 @Composable
 fun PropertiesDialog(provider: StorageProvider, paths: List<String>, currentFolder: String, onClose: () -> Unit) {
-    val info by produceState<PropertiesInfo?>(null, paths, currentFolder) {
-        value = withContext(Dispatchers.IO) { computeProperties(provider, paths, currentFolder) }
+    var info by remember { mutableStateOf<PropertiesInfo?>(null) }
+    androidx.compose.runtime.LaunchedEffect(paths, currentFolder) {
+        info = withContext(Dispatchers.IO) { computeProperties(provider, paths, currentFolder) }
     }
     var tab by remember { mutableStateOf(0) }
     val c = FluentTheme.colors
