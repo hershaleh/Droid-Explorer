@@ -98,3 +98,40 @@ fun ExplorerDialogButton(text: String, onClick: () -> Unit, isDefault: Boolean =
 fun ExplorerDialogHeading(text: String) {
     Text(text, style = FluentTheme.typography.bodyLarge, color = FluentTheme.colors.accent)
 }
+
+/**
+ * Classic property-sheet tabs: a row of tabs over a bordered panel, the selected tab joined to the panel.
+ * Used by the Properties and Folder Options windows.
+ */
+@Composable
+fun ExplorerTabs(
+    labels: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val c = FluentTheme.colors
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.padding(horizontal = 4.dp)) {
+            labels.forEachIndexed { i, label ->
+                val on = i == selected
+                Box(
+                    Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                        .background(if (on) c.flyoutFill else c.windowBackground)
+                        .border(1.dp, c.surfaceStroke, androidx.compose.foundation.shape.RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                        .clickable { onSelect(i) }
+                        .padding(horizontal = 14.dp, vertical = if (on) 8.dp else 5.dp),
+                ) {
+                    Text(label, style = FluentTheme.typography.body, color = c.textPrimary, maxLines = 1)
+                }
+            }
+        }
+        Column(
+            Modifier.fillMaxWidth().border(1.dp, c.surfaceStroke).background(c.flyoutFill).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            content = content,
+        )
+    }
+}

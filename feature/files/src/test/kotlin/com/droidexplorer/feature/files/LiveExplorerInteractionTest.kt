@@ -223,6 +223,27 @@ class LiveExplorerInteractionTest {
         rule.onNodeWithText("Contains", substring = true).assertExists()
     }
 
+    @Test fun propertiesApplyRenamesAndOptionsHideExtensions() {
+        openSub()
+        rule.onNodeWithText("note.txt").performTouchInput { longClick() }
+        rule.onNodeWithContentDescription("See more").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Properties") > 0 }
+        rule.onNodeWithText("Properties").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Security") > 0 }
+        rule.onNodeWithText("Size on disk:").assertExists()
+        rule.onNodeWithTag("props-name").performTextReplacement("renamed.txt")
+        rule.onNodeWithText("OK").performClick()
+        rule.waitUntil(5000) { File(root, "Sub/renamed.txt").exists() }
+        assertTrue(!File(root, "Sub/note.txt").exists())
+        rule.onNodeWithContentDescription("See more").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Options") > 0 }
+        rule.onNodeWithText("Options").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Hide extensions for known file types") > 0 }
+        rule.onNodeWithText("Hide extensions for known file types").performClick()
+        rule.onNodeWithText("OK").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("renamed") > 0 && rule.onAllNodesWithTextCount("renamed.txt") == 0 }
+    }
+
     private fun androidx.compose.ui.test.SemanticsNodeInteraction.isDisplayedSafe() =
         try { assertExists(); true } catch (_: AssertionError) { false }
 }

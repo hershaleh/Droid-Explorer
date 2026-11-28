@@ -155,4 +155,23 @@
     <string name="props_dims">Dimensions:</string>
     <string name="props_calc">Calculating…</string>
     <string name="props_bytes">%1$s (%2$s bytes)</string>
+    <string name="props_apply">Apply</string>
+    <string name="props_security">Security</string>
+    <string name="props_size_disk">Size on disk:</string>
+    <string name="props_object">Object name:</string>
+    <string name="props_owner">Owner (UID):</string>
+    <string name="props_group">Group (GID):</string>
+    <string name="props_no_perms">Permissions could not be read</string>
+    <string name="perm_read">Read</string>
+    <string name="perm_write">Write</string>
+    <string name="perm_exec">Execute</string>
+    <string name="perm_owner">Owner</string>
+    <string name="perm_group">Group</string>
+    <string name="perm_others">Others</string>
+    <string name="options_title">Folder Options</string>
+    <string name="options_view">View</string>
+    <string name="options_advanced">Advanced settings:</string>
+    <string name="options_hide_ext">Hide extensions for known file types</string>
+    <string name="options_restore">Restore Defaults</string>
+    <string name="ctx_options">Options</string>
 </resources>

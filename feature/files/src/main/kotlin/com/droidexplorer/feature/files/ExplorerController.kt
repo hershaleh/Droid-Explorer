@@ -216,6 +216,20 @@ class ExplorerController(
     fun chooseViewMode(mode: ViewMode) { viewMode = mode }
     fun chooseGroupBy(mode: GroupBy) { groupBy = mode }
     fun changeShowHidden(value: Boolean) { showHidden = value }
+
+    /** Folder Options > View > "Hide extensions for known file types". */
+    var hideExtensions by mutableStateOf(false); private set
+    fun changeHideExtensions(value: Boolean) { hideExtensions = value }
+
+    /** Rename [path] to [newName] right away (Properties window). Blocking; returns an error message or null. */
+    fun renameTo(path: String, newName: String): String? {
+        val name = newName.trim()
+        if (name.isEmpty() || name == path.substringAfterLast('/')) return null
+        var renamed: String? = null
+        val error = attempt { renamed = provider.rename(path, name).path }
+        renamed?.let { new -> if (path in selection) selection = selection - path + new }
+        return error
+    }
     fun updateQuery(text: String) { query = text }
 
     /** Breadcrumb paths from the containing volume's root to [currentPath] (empty on the "This device" page). */

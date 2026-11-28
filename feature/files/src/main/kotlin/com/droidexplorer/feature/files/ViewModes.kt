@@ -69,7 +69,7 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
             )
         } else {
             Text(
-                item.name,
+                displayName(item, actions.hideExtensions),
                 style = if (mode == ViewMode.Icons) FluentTheme.typography.caption else FluentTheme.typography.body,
                 color = c.textPrimary,
                 maxLines = lines,

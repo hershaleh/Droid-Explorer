@@ -105,3 +105,10 @@ internal fun flatIndexOf(groups: List<Pair<ExplorerItem?, List<ExplorerItem>>>, 
     }
     return -1
 }
+
+/** The name shown in lists: without the extension when "Hide extensions" is on (folders and dot-files keep theirs). */
+fun displayName(item: ExplorerItem, hideExtensions: Boolean): String {
+    if (!hideExtensions || item.kind == ItemKind.Folder) return item.name
+    val dot = item.name.lastIndexOf('.')
+    return if (dot > 0) item.name.substring(0, dot) else item.name
+}

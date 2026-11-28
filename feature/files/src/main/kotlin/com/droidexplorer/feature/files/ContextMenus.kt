@@ -98,6 +98,7 @@ fun ExplorerContextMenu(kind: ContextKind, expanded: Boolean, onDismiss: () -> U
                     FluentMenuItem(stringResource(R.string.select_invert), run(actions.onInvertSelection))
                     FluentMenuDivider()
                     FluentMenuItem(stringResource(R.string.ctx_properties), run(actions.onProperties))
+                    FluentMenuItem(stringResource(R.string.ctx_options), run(actions.onOptions), icon = FluentIcons.Settings)
                 }
             }
         }

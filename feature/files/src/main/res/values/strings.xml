@@ -155,4 +155,23 @@
     <string name="props_dims">מידות:</string>
     <string name="props_calc">מחשב…</string>
     <string name="props_bytes">%1$s (%2$s בתים)</string>
+    <string name="props_apply">החל</string>
+    <string name="props_security">אבטחה</string>
+    <string name="props_size_disk">גודל בדיסק:</string>
+    <string name="props_object">שם אובייקט:</string>
+    <string name="props_owner">בעלים (UID):</string>
+    <string name="props_group">קבוצה (GID):</string>
+    <string name="props_no_perms">לא ניתן לקרוא הרשאות</string>
+    <string name="perm_read">קריאה</string>
+    <string name="perm_write">כתיבה</string>
+    <string name="perm_exec">הפעלה</string>
+    <string name="perm_owner">בעלים</string>
+    <string name="perm_group">קבוצה</string>
+    <string name="perm_others">אחרים</string>
+    <string name="options_title">אפשרויות תיקייה</string>
+    <string name="options_view">תצוגה</string>
+    <string name="options_advanced">הגדרות מתקדמות:</string>
+    <string name="options_hide_ext">הסתר סיומות של סוגי קבצים מוכרים</string>
+    <string name="options_restore">שחזר ברירות מחדל</string>
+    <string name="ctx_options">אפשרויות</string>
 </resources>

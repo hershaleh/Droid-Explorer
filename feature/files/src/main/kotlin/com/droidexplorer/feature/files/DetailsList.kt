@@ -154,7 +154,7 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
                     )
                 } else {
                     Text(
-                        item.name,
+                        displayName(item, actions.hideExtensions),
                         style = FluentTheme.typography.body,
                         color = c.textPrimary,
                         maxLines = 1,

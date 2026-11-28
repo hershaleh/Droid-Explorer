@@ -40,6 +40,7 @@ import kotlinx.coroutines.withContext
 private sealed interface Dialog {
     data object Delete : Dialog
     data object Properties : Dialog
+    data object Options : Dialog
     /** File operation problems: shown in the classic File Explorer style. */
     data class Error(val message: String) : Dialog
     /** Address bar problems: shown in the Windows 11 Settings style. */
@@ -268,6 +269,9 @@ fun LiveExplorerScreen(
         onGroupBy = controller::chooseGroupBy,
         showHidden = controller.showHidden,
         onShowHidden = controller::changeShowHidden,
+        hideExtensions = controller.hideExtensions,
+        onHideExtensions = controller::changeHideExtensions,
+        onOptions = { dialog = Dialog.Options },
         onSelectAll = controller::selectAll,
         onSelectNone = controller::clearSelection,
         onInvertSelection = controller::invertSelection,
@@ -306,7 +310,26 @@ fun LiveExplorerScreen(
     }
 
     when (val d = dialog) {
-        Dialog.Properties -> PropertiesDialog(provider, controller.selection.toList(), controller.currentPath) { dialog = null }
+        Dialog.Properties -> PropertiesDialog(
+            provider, controller.selection.toList(), controller.currentPath,
+            onApply = { path, newName, readOnly ->
+                scope.launch {
+                    val error = withContext(Dispatchers.IO) {
+                        readOnly?.let { File(path).setWritable(!it) }
+                        newName?.let { controller.renameTo(path, it) }
+                    }
+                    controller.refresh()
+                    if (error != null) dialog = Dialog.Error(error)
+                }
+            },
+            onClose = { dialog = null },
+        )
+        Dialog.Options -> FolderOptionsDialog(
+            showHidden = controller.showHidden,
+            hideExtensions = controller.hideExtensions,
+            onApply = { hidden, hideExt -> controller.changeShowHidden(hidden); controller.changeHideExtensions(hideExt) },
+            onClose = { dialog = null },
+        )
         Dialog.Delete -> DeleteConfirmDialog(
             items = controller.items.filter { it.path in controller.selection },
             onYes = { dialog = null; runOp(controller::deleteSelected) },
