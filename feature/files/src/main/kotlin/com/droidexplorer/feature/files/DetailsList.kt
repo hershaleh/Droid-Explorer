@@ -105,11 +105,12 @@ internal fun GroupHeader(sample: ExplorerItem, groupBy: GroupBy, count: Int) {
 private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: ExplorerActions) {
     val c = FluentTheme.colors
     val cols = layout.columns(maxOf(1f, androidx.compose.ui.platform.LocalDensity.current.fontScale))
+    var menuOpen by remember { androidx.compose.runtime.mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     val pressed by interaction.collectIsPressedAsState()
     val fill = when {
-        pressed -> c.subtleFillTertiary
+        pressed -> c.textPrimary.copy(alpha = 0.14f)
         item.selected -> c.accent.copy(alpha = if (c.isDark) 0.22f else 0.14f)
         hovered -> c.subtleFillSecondary
         else -> Color.Transparent
@@ -125,9 +126,10 @@ private fun ItemRow(item: ExplorerItem, layout: ExplorerLayout, actions: Explore
                 interactionSource = interaction,
                 indication = androidx.compose.material3.ripple(color = c.textPrimary),
                 onClick = { actions.onOpen(item) },
-                onLongClick = { actions.onToggleSelect(item) },
+                onLongClick = { if (item.selected) menuOpen = true else actions.onToggleSelect(item) },
             ),
     ) {
+        ExplorerContextMenu(ContextKind.Item, menuOpen, { menuOpen = false }, actions)
         if (item.selected) {
             Box(
                 Modifier

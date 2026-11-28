@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +52,9 @@ fun ExplorerScreen(
             maxWidth >= 600.dp -> ExplorerLayout.Medium
             else -> ExplorerLayout.Narrow
         }
+        val selectedItems = items.filter { it.selected }
+        val derived = actions.copy(selectedCount = selectedItems.size, singleIsFolder = selectedItems.singleOrNull()?.kind == ItemKind.Folder)
+        @Suppress("NAME_SHADOWING") val actions = derived
         val toolbarActions = if (nav != null && layout != ExplorerLayout.Wide) actions.copy(onMenu = { navOpen = true }) else actions
         Column(Modifier.fillMaxSize()) {
             ExplorerTabStrip(titles = listOf(title ?: stringResource(R.string.nav_downloads)), selectedIndex = 0)
@@ -69,10 +75,22 @@ fun ExplorerScreen(
                 )
                 Row(Modifier.weight(1f)) {
                     if (layout == ExplorerLayout.Wide) ExplorerNavPane(model = nav)
-                    if (actions.viewMode == ViewMode.Details) {
-                        ExplorerDetailsList(items, layout, Modifier.weight(1f), actions, emptyText, revealPath, onRevealed)
-                    } else {
-                        ExplorerGridList(items, actions.viewMode, Modifier.weight(1f), actions, emptyText, revealPath, onRevealed)
+                    var emptyMenuAt by remember { mutableStateOf<androidx.compose.ui.unit.IntOffset?>(null) }
+                    Box(
+                        Modifier.weight(1f).fillMaxSize().pointerInput(Unit) {
+                            detectTapGestures(onLongPress = { p -> emptyMenuAt = androidx.compose.ui.unit.IntOffset(p.x.toInt(), p.y.toInt()) })
+                        },
+                    ) {
+                        if (actions.viewMode == ViewMode.Details) {
+                            ExplorerDetailsList(items, layout, Modifier.fillMaxSize(), actions, emptyText, revealPath, onRevealed)
+                        } else {
+                            ExplorerGridList(items, actions.viewMode, Modifier.fillMaxSize(), actions, emptyText, revealPath, onRevealed)
+                        }
+                        emptyMenuAt?.let { at ->
+                            Box(Modifier.offset { at }) {
+                                ExplorerContextMenu(ContextKind.EmptyArea, true, { emptyMenuAt = null }, actions)
+                            }
+                        }
                     }
                 }
                 ExplorerStatusBar(items, actions.viewMode, actions.onViewMode)

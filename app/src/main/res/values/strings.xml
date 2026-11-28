@@ -10,4 +10,5 @@
     <string name="volume_internal">אחסון פנימי</string>
     <string name="open_failed">לא ניתן לפתוח את הקובץ</string>
     <string name="install_permission_needed">כדי להתקין קבצי APK צריך לאפשר לאפליקציה להתקין אפליקציות. אשר בהגדרות ואז לחץ שוב על הקובץ.</string>
+    <string name="terminal_cd_copied">הפקודה cd הועתקה. הדבק אותה בטרמינל.</string>
 </resources>

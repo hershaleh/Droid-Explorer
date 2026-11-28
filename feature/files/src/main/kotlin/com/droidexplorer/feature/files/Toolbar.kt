@@ -319,11 +319,7 @@ private fun MoreMenu(actions: ExplorerActions) {
     val label = stringResource(R.string.cmd_more)
     Box {
         ToolbarIconButton(FluentIcons.More, true, label) { open = true }
-        FluentDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            FluentMenuItem(stringResource(R.string.select_all), { open = false; actions.onSelectAll() })
-            FluentMenuItem(stringResource(R.string.select_none), { open = false; actions.onSelectNone() })
-            FluentMenuItem(stringResource(R.string.select_invert), { open = false; actions.onInvertSelection() })
-        }
+        ExplorerContextMenu(ContextKind.More, open, { open = false }, actions)
     }
 }
 

@@ -39,6 +39,7 @@ import kotlinx.coroutines.withContext
 
 private sealed interface Dialog {
     data object Delete : Dialog
+    data object Properties : Dialog
     /** File operation problems: shown in the classic File Explorer style. */
     data class Error(val message: String) : Dialog
     /** Address bar problems: shown in the Windows 11 Settings style. */
@@ -63,9 +64,13 @@ fun LiveExplorerScreen(
     volumes: List<VolumeInfo> = listOf(VolumeInfo("", rootPath)),
     onOpenFile: (String) -> Unit = {},
     onShare: (List<String>) -> Unit = {},
+    onOpenWith: (String) -> Unit = {},
+    /** Null when no terminal app is installed. */
+    onOpenTerminal: ((String) -> Unit)? = null,
 ) {
     val controller = remember(provider, rootPath, volumes) { ExplorerController(provider, rootPath, volumes = volumes) }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
     val tree = remember(provider) { NavTreeState(provider) }
     LaunchedEffect(controller.refreshTick) { tree.invalidate() }
     var dialog by remember { mutableStateOf<Dialog?>(null) }
@@ -241,6 +246,20 @@ fun LiveExplorerScreen(
         onPaste = ::startPaste,
         onRename = { controller.selection.singleOrNull()?.let(controller::startRename) },
         onShare = { onShare(controller.selection.toList()) },
+        onOpenSelected = {
+            controller.selection.singleOrNull()?.let { p ->
+                val item = controller.items.firstOrNull { it.path == p }
+                if (item?.isDirectory == true) controller.navigate(p) else onOpenFile(p)
+            }
+        },
+        onOpenWith = { controller.selection.singleOrNull()?.let(onOpenWith) },
+        onCopyPath = {
+            val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val text = controller.selection.ifEmpty { setOf(controller.currentPath) }.joinToString("\n") { "\"" + it + "\"" }
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("path", text))
+        },
+        onProperties = { dialog = Dialog.Properties },
+        onOpenTerminal = onOpenTerminal?.let { open -> { open(controller.currentPath) } },
         onDelete = { dialog = Dialog.Delete },
         onSort = { key, asc -> controller.changeSort(SortOrder(key, asc)) },
         viewMode = controller.viewMode,
@@ -287,6 +306,7 @@ fun LiveExplorerScreen(
     }
 
     when (val d = dialog) {
+        Dialog.Properties -> PropertiesDialog(provider, controller.selection.toList(), controller.currentPath) { dialog = null }
         Dialog.Delete -> DeleteConfirmDialog(
             items = controller.items.filter { it.path in controller.selection },
             onYes = { dialog = null; runOp(controller::deleteSelected) },

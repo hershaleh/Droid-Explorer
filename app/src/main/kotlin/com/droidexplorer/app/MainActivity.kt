@@ -59,6 +59,8 @@ class MainActivity : ComponentActivity() {
                         volumes = volumes,
                         onOpenFile = { context.openFile(it) },
                         onShare = { context.shareFiles(it) },
+                        onOpenWith = { context.openWith(it) },
+                        onOpenTerminal = if (context.hasTermux()) { folder -> context.openTermux(folder) } else null,
                     )
                 }
             }
@@ -110,6 +112,33 @@ private fun android.content.Context.openFile(path: String) {
         // Show the real reason instead of failing silently.
         android.widget.Toast.makeText(this, "${getString(R.string.open_failed)}: ${e.javaClass.simpleName} ${e.message}", android.widget.Toast.LENGTH_LONG).show()
     }
+}
+
+/** "Open with": always shows the app chooser, even if a default app exists. */
+private fun android.content.Context.openWith(path: String) {
+    if (!File(path).isFile) return
+    try {
+        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uriFor(path), mimeOf(path))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: android.content.ActivityNotFoundException) {
+        android.widget.Toast.makeText(this, getString(R.string.no_app_to_open), android.widget.Toast.LENGTH_LONG).show()
+    }
+}
+
+private fun android.content.Context.hasTermux(): Boolean =
+    packageManager.getLaunchIntentForPackage("com.termux") != null
+
+/**
+ * Termux cannot be told to start in a folder without its special RUN_COMMAND permission, so this opens Termux
+ * and puts a `cd` command for the folder on the clipboard to paste.
+ */
+private fun android.content.Context.openTermux(folder: String) {
+    val intent = packageManager.getLaunchIntentForPackage("com.termux") ?: return
+    val cm = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+    cm.setPrimaryClip(android.content.ClipData.newPlainText("cd", "cd \"" + folder + "\""))
+    android.widget.Toast.makeText(this, getString(R.string.terminal_cd_copied), android.widget.Toast.LENGTH_LONG).show()
+    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 private fun android.content.Context.shareFiles(paths: List<String>) {

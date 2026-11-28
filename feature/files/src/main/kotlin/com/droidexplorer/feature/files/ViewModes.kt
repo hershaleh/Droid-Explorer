@@ -41,11 +41,12 @@ import com.droidexplorer.ui.design.FluentTheme
 @Composable
 private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerActions) {
     val c = FluentTheme.colors
+    var menuOpen by remember { androidx.compose.runtime.mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     val pressed by interaction.collectIsPressedAsState()
     val fill = when {
-        pressed -> c.subtleFillTertiary
+        pressed -> c.textPrimary.copy(alpha = 0.14f)
         item.selected -> c.accent.copy(alpha = if (c.isDark) 0.22f else 0.14f)
         hovered -> c.subtleFillSecondary
         else -> Color.Transparent
@@ -88,9 +89,10 @@ private fun GridCell(item: ExplorerItem, mode: ViewMode, actions: ExplorerAction
                 interactionSource = interaction,
                 indication = androidx.compose.material3.ripple(color = c.textPrimary),
                 onClick = { actions.onOpen(item) },
-                onLongClick = { actions.onToggleSelect(item) },
+                onLongClick = { if (item.selected) menuOpen = true else actions.onToggleSelect(item) },
             ),
     ) {
+        ExplorerContextMenu(ContextKind.Item, menuOpen, { menuOpen = false }, actions)
         when (mode) {
             ViewMode.List -> Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 FileGlyph(item.kind)

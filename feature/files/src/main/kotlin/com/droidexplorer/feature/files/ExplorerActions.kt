@@ -41,4 +41,13 @@ data class ExplorerActions(
     val renamingPath: String? = null,
     val onRenameCommit: (String, String) -> Unit = { _, _ -> },
     val onRenameCancel: () -> Unit = {},
+    /** Filled in by the screen from the item list. */
+    val selectedCount: Int = 0,
+    val singleIsFolder: Boolean = false,
+    val onOpenWith: () -> Unit = {},
+    val onCopyPath: () -> Unit = {},
+    val onProperties: () -> Unit = {},
+    val onOpenSelected: () -> Unit = {},
+    /** Null when no terminal app (Termux) is installed. */
+    val onOpenTerminal: (() -> Unit)? = null,
 )

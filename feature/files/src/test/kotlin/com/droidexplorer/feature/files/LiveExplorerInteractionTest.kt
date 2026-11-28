@@ -206,6 +206,23 @@ class LiveExplorerInteractionTest {
         rule.waitUntil(5000) { !File(root, "Sub/note.txt").exists() }
     }
 
+    @Test fun secondLongPressOnSelectedItemOpensItemMenu() {
+        openSub()
+        rule.onNodeWithText("note.txt").performTouchInput { longClick() }
+        rule.onNodeWithText("note.txt").performTouchInput { longClick() }
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Copy as path") > 0 }
+        rule.onNodeWithText("Open with").assertExists()
+        rule.onNodeWithText("Properties").assertExists()
+    }
+
+    @Test fun moreMenuOffersPropertiesAndPropertiesShowFolderInfo() {
+        rule.onNodeWithContentDescription("See more").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Properties") > 0 }
+        rule.onNodeWithText("Properties").performClick()
+        rule.waitUntil(5000) { rule.onAllNodesWithTextCount("General") > 0 }
+        rule.onNodeWithText("Contains", substring = true).assertExists()
+    }
+
     private fun androidx.compose.ui.test.SemanticsNodeInteraction.isDisplayedSafe() =
         try { assertExists(); true } catch (_: AssertionError) { false }
 }

@@ -55,6 +55,8 @@ fun FluentMenuItem(
     checked: Boolean = false,
     enabled: Boolean = true,
     icon: FluentIcons? = null,
+    chevron: Boolean = false,
+    bold: Boolean = false,
 ) {
     val c = FluentTheme.colors
     Row(
@@ -73,7 +75,13 @@ fun FluentMenuItem(
             else if (icon != null) FluentIcon(icon, tint = tint, size = 16.dp)
         }
         Spacer(Modifier.width(10.dp))
-        Text(text, style = FluentTheme.typography.body, color = if (enabled) c.textPrimary else c.textDisabled)
+        Text(
+            text,
+            style = if (bold) FluentTheme.typography.bodyStrong else FluentTheme.typography.body,
+            color = if (enabled) c.textPrimary else c.textDisabled,
+            modifier = Modifier.weight(1f),
+        )
+        if (chevron) FluentIcon(FluentIcons.ChevronRight, tint = c.textSecondary, size = 12.dp)
     }
 }
 
