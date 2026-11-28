@@ -42,7 +42,11 @@ interface StorageProvider {
 enum class ConflictChoice { REPLACE, SKIP, KEEP_BOTH }
 
 /** [applyToAll] makes the same choice apply to every further conflict in this operation. */
-data class ConflictDecision(val choice: ConflictChoice, val applyToAll: Boolean = false)
+/**
+ * [skipIdentical]: from now on, silently skip conflicting files that have the same size and modification date
+ * (the "Skip files with the same date and size" box of the Windows compare window).
+ */
+data class ConflictDecision(val choice: ConflictChoice, val applyToAll: Boolean = false, val skipIdentical: Boolean = false)
 
 /** A file in the destination that has the same name as an incoming file. */
 data class Conflict(val source: StorageItem, val existing: StorageItem, val totalItems: Int = 1)
@@ -63,6 +67,9 @@ interface TransferListener {
     fun onConflict(conflict: Conflict): ConflictDecision? = ConflictDecision(ConflictChoice.KEEP_BOTH)
 
     fun isCancelled(): Boolean = false
+
+    /** While true the transfer waits (the pause button of the progress window). */
+    fun isPaused(): Boolean = false
 }
 
 /** [created] holds the new top-level paths in the destination (what to select afterwards). */

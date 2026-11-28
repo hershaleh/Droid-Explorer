@@ -125,7 +125,7 @@
     <string name="compare_title">Which files do you want to keep?</string>
     <string name="compare_body">If you select both versions, the copied file will have a number added to its name.</string>
     <string name="compare_from">Files from %1$s</string>
-    <string name="compare_in">Files in %1$s</string>
+    <string name="compare_in">Files already in %1$s</string>
     <string name="compare_continue">Continue</string>
     <string name="compare_size">Size: %1$s</string>
     <string name="compare_modified">Date modified: %1$s</string>
@@ -174,4 +174,15 @@
     <string name="options_hide_ext">Hide extensions for known file types</string>
     <string name="options_restore">Restore Defaults</string>
     <string name="ctx_options">Options</string>
+    <string name="xfer_verb_copy_one">Copying 1 item</string>
+    <string name="xfer_verb_copy_many">Copying %1$d items</string>
+    <string name="xfer_verb_move_one">Moving 1 item</string>
+    <string name="xfer_verb_move_many">Moving %1$d items</string>
+    <string name="xfer_from_word">from</string>
+    <string name="xfer_to_word">to</string>
+    <string name="progress_heading">%1$s - %2$d%% complete</string>
+    <string name="transfer_pause">Pause</string>
+    <string name="transfer_resume">Resume</string>
+    <string name="compare_window">File Conflict</string>
+    <string name="compare_skip_identical">Skip files with the same date and size</string>
 </resources>

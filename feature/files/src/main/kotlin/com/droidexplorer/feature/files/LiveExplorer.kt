@@ -49,7 +49,14 @@ private sealed interface Dialog {
 }
 
 /** A running copy/move as shown in the progress dialog. */
-data class TransferUi(val progress: TransferProgress, val moving: Boolean, val from: String, val to: String)
+data class TransferUi(
+    val progress: TransferProgress,
+    val moving: Boolean,
+    val from: String,
+    val to: String,
+    /** Recent speeds (bytes/s), newest last, for the speed graph. */
+    val speeds: List<Long> = emptyList(),
+)
 
 /** A conflict waiting for the user; the transfer thread blocks on [answer]. */
 private data class PendingConflict(val conflict: Conflict, val answer: CompletableFuture<ConflictDecision?>)
@@ -134,6 +141,8 @@ fun LiveExplorerScreen(
     var transferUi by remember { mutableStateOf<TransferUi?>(null) }
     var pending by remember { mutableStateOf<PendingConflict?>(null) }
     val cancelFlag = remember { AtomicBoolean(false) }
+    val pauseFlag = remember { AtomicBoolean(false) }
+    var paused by remember { mutableStateOf(false) }
 
     fun startPaste() {
         if (controller.clipboard.isEmpty() || transferUi != null) return
@@ -142,12 +151,17 @@ fun LiveExplorerScreen(
         val from = File(controller.clipboard.first()).parentFile?.name.orEmpty()
         val to = File(controller.currentPath).name
         cancelFlag.set(false)
+        pauseFlag.set(false)
+        paused = false
         val startedAt = System.nanoTime()
         val listener = object : TransferListener {
             override fun onProgress(progress: TransferProgress) {
                 // Like Windows, show the progress window only when the operation is not instant.
                 val slow = System.nanoTime() - startedAt > 700_000_000L
-                if (slow || transferUi != null) transferUi = TransferUi(progress, moving, from, to)
+                if (slow || transferUi != null) {
+                    val old = transferUi?.speeds.orEmpty()
+                    transferUi = TransferUi(progress, moving, from, to, (old + progress.bytesPerSecond).takeLast(60))
+                }
             }
             override fun onConflict(conflict: Conflict): ConflictDecision? {
                 val future = CompletableFuture<ConflictDecision?>()
@@ -155,6 +169,7 @@ fun LiveExplorerScreen(
                 return future.get()
             }
             override fun isCancelled() = cancelFlag.get()
+            override fun isPaused() = pauseFlag.get()
         }
         scope.launch {
             val outcome = withContext(Dispatchers.IO) { controller.pasteWith(listener) }
@@ -301,11 +316,17 @@ fun LiveExplorerScreen(
             ?: if (searching) searchEmpty else stringResource(R.string.folder_empty),
     )
 
-    transferUi?.let { ui -> TransferProgressDialog(ui, onCancel = { cancelFlag.set(true) }) }
+    transferUi?.let { ui ->
+        TransferProgressDialog(
+            ui, paused,
+            onTogglePause = { paused = !paused; pauseFlag.set(paused) },
+            onCancel = { cancelFlag.set(true); pauseFlag.set(false) },
+        )
+    }
     pending?.let { pc ->
-        ConflictDialogs(pc.conflict, pc.conflict.totalItems) { answer ->
+        ConflictDialogs(pc.conflict, pc.conflict.totalItems, controller.clipboardIsCut) { answer ->
             pending = null
-            pc.answer.complete(answer?.let { ConflictDecision(it.choice, it.applyToAll) })
+            pc.answer.complete(answer?.let { ConflictDecision(it.choice, it.applyToAll, it.skipIdentical) })
         }
     }
 

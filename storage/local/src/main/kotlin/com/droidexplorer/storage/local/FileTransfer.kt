@@ -32,6 +32,7 @@ internal class FileTransfer(
     private var doneItems = 0
     private var skipped = 0
     private var sticky: ConflictChoice? = null
+    private var skipIdentical = false
     private var lastReport = 0L
     private val started = System.nanoTime()
     private val created = mutableListOf<String>()
@@ -129,8 +130,12 @@ internal class FileTransfer(
 
     private fun decide(src: File, dst: File): ConflictChoice {
         sticky?.let { return it }
+        if (skipIdentical && src.isFile && dst.isFile && src.length() == dst.length() &&
+            Math.abs(src.lastModified() - dst.lastModified()) < 2000
+        ) return ConflictChoice.SKIP
         val decision = listener.onConflict(Conflict(provider.itemOf(src), provider.itemOf(dst), totalItems))
             ?: throw CancelledException()
+        if (decision.skipIdentical) skipIdentical = true
         if (decision.applyToAll) sticky = decision.choice
         return decision.choice
     }
@@ -181,6 +186,7 @@ internal class FileTransfer(
     private fun byteCount(f: File): Long = if (f.isDirectory) (f.listFiles()?.sumOf { byteCount(it) } ?: 0L) else f.length()
 
     private fun checkCancelled() {
+        while (listener.isPaused() && !listener.isCancelled()) Thread.sleep(80)
         if (listener.isCancelled()) throw CancelledException()
     }
 

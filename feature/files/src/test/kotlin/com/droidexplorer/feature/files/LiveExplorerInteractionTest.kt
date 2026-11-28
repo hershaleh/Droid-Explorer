@@ -1,9 +1,11 @@
 package com.droidexplorer.feature.files
 
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -189,6 +191,9 @@ class LiveExplorerInteractionTest {
         rule.onNodeWithContentDescription("Paste").performClick()
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("Compare info for both files") > 0 }
         rule.onNodeWithText("Compare info for both files").performClick()
+        rule.onNodeWithText("Continue").assertIsNotEnabled()
+        rule.onAllNodesWithText("Files from", substring = true).onFirst().performClick()
+        rule.onAllNodesWithText("Files already in", substring = true).onFirst().performClick()
         rule.onNodeWithText("Continue").performClick()
         rule.waitUntil(5000) { File(root, "Sub/a (1).txt").exists() }
         rule.waitUntil(5000) { rule.onAllNodesWithTextCount("a (1).txt") > 0 }

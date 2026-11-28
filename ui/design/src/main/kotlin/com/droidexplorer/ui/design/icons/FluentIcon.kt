@@ -27,6 +27,7 @@ enum class FluentIcons(val mirrorsInRtl: Boolean = false) {
     Back(true), Forward(true), Up, Refresh, Search, ChevronRight(true), ChevronDown, Close, Add,
     Cut, Copy, Paste, Rename, Share, Delete, Sort, View, List, More,
     Home, Download, Document, Picture, Music, Video, Drive, Cloud, Network, Settings, Menu, Check,
+    Undo, Compare, Pause, Play,
 }
 
 private class Pen(val scope: DrawScope, val color: Color, val width: Float) {
@@ -182,6 +183,20 @@ private fun drawIcon(scope: DrawScope, tint: Color, icon: FluentIcons, sw: Float
         }
         FluentIcons.Network -> { p.rrect(3f, 4f, 14f, 9f, 1.8f); p.line(8f, 16.5f, 12f, 16.5f); p.line(10f, 13f, 10f, 16.5f) }
         FluentIcons.Check -> p.poly(4.5f, 10.5f, 8.5f, 14.5f, 15.5f, 5.5f)
+        FluentIcons.Undo -> {
+            p.poly(7.8f, 4.2f, 4.2f, 8f, 7.8f, 11.8f)
+            p.path {
+                moveTo(4.5f, 8f); lineTo(11.5f, 8f)
+                cubicTo(15f, 8f, 16.5f, 10f, 16.5f, 12.3f)
+                cubicTo(16.5f, 14.8f, 14.6f, 16f, 12f, 16f); lineTo(8f, 16f)
+            }
+        }
+        FluentIcons.Compare -> {
+            p.rrect(2.8f, 3f, 8f, 9.5f, 1.5f); p.rrect(9.2f, 7.5f, 8f, 9.5f, 1.5f)
+            p.line(5f, 15.5f, 7f, 15.5f); p.line(13f, 5f, 15f, 5f)
+        }
+        FluentIcons.Pause -> { p.line(7.5f, 4.5f, 7.5f, 15.5f); p.line(12.5f, 4.5f, 12.5f, 15.5f) }
+        FluentIcons.Play -> p.poly(6.5f, 4.5f, 15f, 10f, 6.5f, 15.5f, close = true)
         FluentIcons.Menu -> { p.line(3.5f, 5.5f, 16.5f, 5.5f); p.line(3.5f, 10f, 16.5f, 10f); p.line(3.5f, 14.5f, 16.5f, 14.5f) }
         FluentIcons.Settings -> {
             p.circle(10f, 10f, 2.6f)
